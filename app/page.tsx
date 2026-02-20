@@ -423,13 +423,13 @@ export default function Home() {
       // Footer text
       pdf.setFontSize(8);
       pdf.setTextColor(120, 113, 108);
-      pdf.text('Gracias por usar Moka Gift List', pageWidth / 2, yPosition, { align: 'center' });
+      pdf.text('Gracias por usar Moka Wish List', pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 5;
       pdf.setFontSize(7);
       pdf.setTextColor(150, 150, 150);
       pdf.text('Este documento fue generado automaticamente', pageWidth / 2, yPosition, { align: 'center' });
 
-      pdf.save('moka-gift-list-recibo.pdf');
+      pdf.save('moka-wish-list.pdf');
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error al generar el PDF. Por favor, intentalo de nuevo.');

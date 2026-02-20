@@ -80,7 +80,7 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-2" style={{ color: '#eaddd1' }}>
               Última Actualización
             </h3>
-            <p className="text-xl font-bold" style={{ color: '#f8f5f0' }}>7 Diciembre 2025</p>
+            <p className="text-xl font-bold" style={{ color: '#f8f5f0' }}>Recién actualizada</p>
           </motion.div>
 
           {/* Share */}

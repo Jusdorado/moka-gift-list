@@ -13,7 +13,7 @@ export default function Hero({ onExploreClick, productCount }: HeroProps) {
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
             {/* Simple gradient background */}
             <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--moka-50), var(--moka-100))' }} />
-            
+
             {/* Subtle gradient orb */}
             <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: 'var(--gold-400)', opacity: 0.1 }} />
 
@@ -26,9 +26,9 @@ export default function Hero({ onExploreClick, productCount }: HeroProps) {
                     transition={{ delay: 0.1 }}
                     className="text-6xl md:text-8xl font-bold mb-6 leading-tight tracking-tight"
                 >
-                    Lista de Regalos
+                    Wish List
                     <br />
-                    <span className="gradient-text">Möka 2025</span>
+                    <span className="gradient-text">Möka</span>
                 </motion.h1>
 
                 {/* Subtitle */}
