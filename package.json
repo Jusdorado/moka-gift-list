@@ -1,0 +1,34 @@
+{
+  "name": "moka-gift-list",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "init-db": "tsx scripts/init-db.ts",
+    "update-prices-db": "tsx scripts/update-prices-db.ts",
+    "extract-images-db": "tsx scripts/extract-images-db.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "framer-motion": "^12.23.25",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.556.0",
+    "next": "16.0.7",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.7",
+    "tailwindcss": "^4",
+    "tsx": "^4.7.0",
+    "typescript": "^5"
+  }
+}
