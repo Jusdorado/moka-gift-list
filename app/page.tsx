@@ -132,15 +132,22 @@ export default function Home() {
     }));
   };
 
-  const handleLogin = (username: string, password: string) => {
-    const adminUser = process.env.NEXT_PUBLIC_ADMIN_USER || 'admin';
-    const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASS || 'admin';
-    if (username === adminUser && password === adminPass) {
-      setAuthenticated(true);
-      setShowLoginModal(false);
-      setShowAdminPanel(true);
-    } else {
-      alert('Credenciales incorrectas');
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      if (res.ok) {
+        setAuthenticated(true);
+        setShowLoginModal(false);
+        setShowAdminPanel(true);
+      } else {
+        alert('Credenciales incorrectas');
+      }
+    } catch {
+      alert('No se pudo validar. Intenta de nuevo.');
     }
   };
 
@@ -324,7 +331,6 @@ export default function Home() {
         pdf.text('No hay productos marcados como comprados', pageWidth / 2, yPosition + 10, { align: 'center' });
       }
 
-      let productNumber = 1;
       for (const product of purchasedProducts) {
         // New page if needed
         if (yPosition > pageHeight - 60) {
@@ -410,7 +416,6 @@ export default function Home() {
         pdf.textWithLink('Ver producto online', margin + 35, yPosition + 50, { url: product.url });
 
         yPosition += 55;
-        productNumber++;
       }
 
       // Footer separator
