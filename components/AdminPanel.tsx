@@ -482,6 +482,7 @@ export default function AdminPanel({
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0">
                           {product.url && <a href={product.url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg" style={{ color: 'var(--moka-400)' }}><ExternalLink className="w-3.5 h-3.5" /></a>}
+                          <button onClick={() => onUpdateProduct(product.id, { purchased: !product.purchased })} className="p-2 rounded-lg" style={{ color: product.purchased ? '#16a34a' : 'var(--moka-400)' }} title={product.purchased ? 'Marcar como no comprado' : 'Marcar como comprado'}><CheckCircle className="w-3.5 h-3.5" /></button>
                           <button onClick={() => startEdit(product)} className="p-2 rounded-lg" style={{ color: 'var(--gold-600)' }}><Pencil className="w-3.5 h-3.5" /></button>
                           <button onClick={() => handleDelete(product.id)} className="p-2 rounded-lg" style={{ color: confirmDelete === product.id ? '#fff' : '#dc2626', background: confirmDelete === product.id ? '#dc2626' : 'transparent' }}><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>

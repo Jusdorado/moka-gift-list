@@ -71,13 +71,14 @@ export default function Home() {
     loadProducts();
   }, []);
 
-  // Load purchased state from localStorage
+  // Load purchased state from products
   useEffect(() => {
-    const saved = localStorage.getItem('moka-purchased');
-    if (saved) {
-      try { setPurchasedState(JSON.parse(saved)); } catch { /* ignore */ }
-    }
-  }, []);
+    const state: { [key: string]: boolean } = {};
+    products.forEach(p => {
+      if (p.purchased) state[p.id] = true;
+    });
+    setPurchasedState(state);
+  }, [products]);
 
   const scrollToProducts = () => {
     productsRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -129,12 +130,25 @@ export default function Home() {
 
   const purchasedCount = Object.values(purchasedState).filter(Boolean).length;
 
-  const handleTogglePurchased = (productId: string) => {
-    setPurchasedState(prev => {
-      const next = { ...prev, [productId]: !prev[productId] };
-      localStorage.setItem('moka-purchased', JSON.stringify(next));
-      return next;
-    });
+  const handleTogglePurchased = async (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    const newPurchased = !product.purchased;
+    
+    // Update local state
+    const updatedProducts = products.map(p => 
+      p.id === productId ? { ...p, purchased: newPurchased } : p
+    );
+    setProducts(updatedProducts);
+    
+    // Update only the purchased field in DB (safe - doesn't delete anything)
+    try {
+      const { updateProductPurchased } = await import('../lib/db');
+      await updateProductPurchased(productId, newPurchased);
+    } catch (error) {
+      console.error('Error updating purchased status:', error);
+      alert('Error al guardar el estado de comprado');
+    }
   };
 
   const handleLogin = async (username: string, password: string) => {
@@ -517,7 +531,6 @@ export default function Home() {
         <ProductGrid
           products={filteredProducts}
           purchasedState={purchasedState}
-          onTogglePurchased={handleTogglePurchased}
           prefillProductId={prefillProductId}
         />
 

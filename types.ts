@@ -12,6 +12,7 @@ export interface Product {
     categoryColor: string;
     categoryEmoji: string;
     createdAt?: string;
+    purchased?: boolean;
 }
 
 export interface Category {

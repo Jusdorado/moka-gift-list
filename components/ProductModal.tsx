@@ -9,12 +9,10 @@ import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ProductModalProps {
   product: Product;
-  isPurchased: boolean;
   onClose: () => void;
-  onTogglePurchased: (productId: string) => void;
 }
 
-export default function ProductModal({ product, isPurchased, onClose, onTogglePurchased }: ProductModalProps) {
+export default function ProductModal({ product, onClose }: ProductModalProps) {
   const [imageError, setImageError] = useState(false);
   const { price: realTimePrice, loading: priceLoading, error: priceError } = useRealTimePrice(product.url, true);
 
@@ -243,24 +241,6 @@ export default function ProductModal({ product, isPurchased, onClose, onTogglePu
                 <ExternalLink className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
               </a>
 
-              <button
-                onClick={() => onTogglePurchased(product.id)}
-                className="flex items-center justify-center gap-2 w-full px-6 py-4 font-bold rounded-xl transition-all border-2"
-                style={{
-                  background: isPurchased ? 'rgba(112, 141, 129, 0.1)' : 'var(--moka-100)',
-                  color: isPurchased ? 'var(--accent-olive)' : 'var(--moka-700)',
-                  borderColor: isPurchased ? 'var(--accent-olive)' : 'var(--moka-200)'
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={isPurchased}
-                  onChange={() => {}}
-                  className="w-5 h-5 rounded border-2 cursor-pointer"
-                  style={{ borderColor: 'var(--moka-300)' }}
-                />
-                <span>{isPurchased ? '✓ Comprado' : 'Marcar como comprado'}</span>
-              </button>
             </div>
           </div>
         </motion.div>

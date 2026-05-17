@@ -50,7 +50,9 @@ async function initDatabase() {
         color TEXT,
         category TEXT NOT NULL,
         category_color TEXT NOT NULL,
-        category_emoji TEXT NOT NULL
+        category_emoji TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        purchased BOOLEAN DEFAULT FALSE
       )
     `;
     console.log('✅ Products table created');

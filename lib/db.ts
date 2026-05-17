@@ -15,6 +15,7 @@ type DBProductRow = {
   category_color: string;
   category_emoji: string;
   created_at: string | null;
+  purchased: boolean;
 };
 
 type CategoryDefinitionRow = {
@@ -59,6 +60,7 @@ export async function getProducts(): Promise<Product[]> {
       categoryColor: row.category_color,
       categoryEmoji: row.category_emoji,
       createdAt: row.created_at ?? undefined,
+      purchased: row.purchased ?? false,
     }));
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -82,14 +84,14 @@ export async function saveProducts(products: Product[]): Promise<void> {
       await sql`
         INSERT INTO products (
           id, name, price, url, image, size, description, 
-          author, color, category, category_color, category_emoji, created_at
+          author, color, category, category_color, category_emoji, created_at, purchased
         ) VALUES (
           ${product.id}, ${product.name}, ${product.price || null}, 
           ${product.url}, ${product.image || null}, ${product.size || null},
           ${product.description || null}, ${product.author || null}, 
           ${product.color || null}, ${product.category}, 
           ${product.categoryColor}, ${product.categoryEmoji},
-          ${product.createdAt || new Date().toISOString()}
+          ${product.createdAt || new Date().toISOString()}, ${product.purchased || false}
         )
       `;
     }
@@ -119,10 +121,25 @@ export async function getProductById(id: string): Promise<Product | null> {
       category: row.category,
       categoryColor: row.category_color,
       categoryEmoji: row.category_emoji,
+      purchased: row.purchased ?? false,
     };
   } catch (error) {
     console.error('Error fetching product by id:', error);
     return null;
+  }
+}
+
+export async function updateProductPurchased(id: string, purchased: boolean): Promise<void> {
+  try {
+    const sql = getDb();
+    if (!sql) {
+      console.warn('Cannot update purchased: DATABASE_URL not configured');
+      return;
+    }
+    await sql`UPDATE products SET purchased = ${purchased} WHERE id = ${id}`;
+  } catch (error) {
+    console.error('Error updating purchased status:', error);
+    throw error;
   }
 }
 
@@ -148,7 +165,9 @@ export async function initializeDatabase(): Promise<void> {
         color TEXT,
         category TEXT NOT NULL,
         category_color TEXT NOT NULL,
-        category_emoji TEXT NOT NULL
+        category_emoji TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        purchased BOOLEAN DEFAULT FALSE
       )
     `;
     

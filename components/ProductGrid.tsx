@@ -8,11 +8,10 @@ import ProductModal from './ProductModal';
 interface ProductGridProps {
     products: Product[];
     purchasedState: { [key: string]: boolean };
-    onTogglePurchased: (productId: string) => void;
     prefillProductId?: string | null;
 }
 
-export default function ProductGrid({ products, purchasedState, onTogglePurchased, prefillProductId }: ProductGridProps) {
+export default function ProductGrid({ products, purchasedState, prefillProductId }: ProductGridProps) {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const handleShare = (product: Product) => {
@@ -87,9 +86,7 @@ export default function ProductGrid({ products, purchasedState, onTogglePurchase
             {selectedProduct && (
                 <ProductModal
                     product={selectedProduct}
-                    isPurchased={purchasedState[selectedProduct.id] || false}
                     onClose={closeProduct}
-                    onTogglePurchased={onTogglePurchased}
                 />
             )}
         </>
