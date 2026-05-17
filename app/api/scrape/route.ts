@@ -10,7 +10,12 @@ function decode(s: string): string {
 
 function cleanText(s: string | null): string | null {
   if (!s) return null;
-  return decode(s).replace(/\s+/g, ' ').trim() || null;
+  let text = decode(s).replace(/\s+/g, ' ').trim();
+  // Remove leading emojis and special characters
+  text = text.replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]+\s*/gu, '');
+  // Remove "Compra/Comprar el/la/los" prefixes
+  text = text.replace(/^(?:Compra[r]?\s+(?:el|la|los|las)?\s*)/i, '');
+  return text || null;
 }
 
 function toEuro(raw: string): string | null {
@@ -298,6 +303,9 @@ function extractName(html: string, domain: string, jsonLd: Record<string, unknow
     /\s*[-–|:]\s*Tienda\s*online.*$/i,
     /\s*[-–|:]\s*Official\s*Store.*$/i,
     /\s*[-–|:]\s*Offici[ae]l.*$/i,
+    /\s*[-–|:]\s*DJI\s*Store.*$/i,
+    /\s*[-–|:]\s*tienda\s*DJI.*$/i,
+    /\s*[-–|:]\s*Aporro.*$/i,
     /\s*\|\s*[^|]{0,40}$/,
   ];
 
@@ -444,30 +452,43 @@ export async function POST(request: Request) {
 
     const domain = getDomain(url);
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
+    const userAgents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    ];
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Cache-Control': 'no-cache',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Upgrade-Insecure-Requests': '1',
-      },
-      signal: controller.signal,
-      redirect: 'follow',
-    });
+    let response: Response | null = null;
+    for (let attempt = 0; attempt < userAgents.length; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      try {
+        response = await fetch(url, {
+          headers: {
+            'User-Agent': userAgents[attempt],
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control': 'no-cache',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'cross-site',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1',
+            'Referer': 'https://www.google.com/',
+          },
+          signal: controller.signal,
+          redirect: 'follow',
+        });
+        clearTimeout(timeout);
+        if (response.ok) break;
+      } catch {
+        clearTimeout(timeout);
+        continue;
+      }
+    }
 
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      return Response.json({ error: `HTTP ${response.status}` }, { status: 502 });
+    if (!response || !response.ok) {
+      return Response.json({ error: `HTTP ${response?.status || 'timeout'}` }, { status: 502 });
     }
 
     const html = await response.text();

@@ -71,10 +71,12 @@ export default function Home() {
     loadProducts();
   }, []);
 
-  // Clear purchased state on page load - always start fresh
+  // Load purchased state from localStorage
   useEffect(() => {
-    localStorage.removeItem('moka-purchased');
-    setPurchasedState({});
+    const saved = localStorage.getItem('moka-purchased');
+    if (saved) {
+      try { setPurchasedState(JSON.parse(saved)); } catch { /* ignore */ }
+    }
   }, []);
 
   const scrollToProducts = () => {
@@ -128,10 +130,11 @@ export default function Home() {
   const purchasedCount = Object.values(purchasedState).filter(Boolean).length;
 
   const handleTogglePurchased = (productId: string) => {
-    setPurchasedState(prev => ({
-      ...prev,
-      [productId]: !prev[productId]
-    }));
+    setPurchasedState(prev => {
+      const next = { ...prev, [productId]: !prev[productId] };
+      localStorage.setItem('moka-purchased', JSON.stringify(next));
+      return next;
+    });
   };
 
   const handleLogin = async (username: string, password: string) => {
