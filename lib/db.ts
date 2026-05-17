@@ -14,6 +14,7 @@ type DBProductRow = {
   category: string;
   category_color: string;
   category_emoji: string;
+  created_at: string | null;
 };
 
 type CategoryDefinitionRow = {
@@ -41,7 +42,7 @@ export async function getProducts(): Promise<Product[]> {
       console.error('DATABASE_URL not configured');
       return [];
     }
-    const rows = (await sql`SELECT * FROM products ORDER BY id`) as unknown as DBProductRow[];
+    const rows = (await sql`SELECT * FROM products ORDER BY created_at DESC, id`) as unknown as DBProductRow[];
     
     // Map database columns (snake_case) to TypeScript interface (camelCase)
     return rows.map((row) => ({
@@ -57,6 +58,7 @@ export async function getProducts(): Promise<Product[]> {
       category: row.category,
       categoryColor: row.category_color,
       categoryEmoji: row.category_emoji,
+      createdAt: row.created_at ?? undefined,
     }));
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -80,13 +82,14 @@ export async function saveProducts(products: Product[]): Promise<void> {
       await sql`
         INSERT INTO products (
           id, name, price, url, image, size, description, 
-          author, color, category, category_color, category_emoji
+          author, color, category, category_color, category_emoji, created_at
         ) VALUES (
           ${product.id}, ${product.name}, ${product.price || null}, 
           ${product.url}, ${product.image || null}, ${product.size || null},
           ${product.description || null}, ${product.author || null}, 
           ${product.color || null}, ${product.category}, 
-          ${product.categoryColor}, ${product.categoryEmoji}
+          ${product.categoryColor}, ${product.categoryEmoji},
+          ${product.createdAt || new Date().toISOString()}
         )
       `;
     }

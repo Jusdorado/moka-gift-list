@@ -1,13 +1,26 @@
 import { NextResponse } from 'next/server';
+import { neon } from '@neondatabase/serverless';
 
 export async function POST(req: Request) {
-  const { username, password } = await req.json();
-  const adminUser = process.env.ADMIN_USER || 'admin';
-  const adminPass = process.env.ADMIN_PASS || 'admin';
+  try {
+    const { username, password } = await req.json();
+    
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      console.error('AUTH: DATABASE_URL not configured');
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
 
-  if (username === adminUser && password === adminPass) {
-    return NextResponse.json({ ok: true });
+    const sql = neon(databaseUrl);
+    const rows = await sql`SELECT * FROM users WHERE username = ${username} AND password = ${password} LIMIT 1`;
+    
+    if (rows && rows.length > 0) {
+      return NextResponse.json({ ok: true });
+    }
+
+    return NextResponse.json({ ok: false }, { status: 401 });
+  } catch (error) {
+    console.error('AUTH error:', error);
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
-
-  return NextResponse.json({ ok: false }, { status: 401 });
 }

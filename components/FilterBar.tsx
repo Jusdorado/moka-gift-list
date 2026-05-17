@@ -2,7 +2,7 @@
 
 import { ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 
-export type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
+export type SortOption = 'default' | 'recent' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
 export type FilterStatus = 'all' | 'purchased' | 'pending';
 
 interface FilterBarProps {
@@ -78,6 +78,7 @@ export default function FilterBar({
             }}
           >
             <option value="default">Ordenar por...</option>
+            <option value="recent">Recién añadidos</option>
             <option value="price-asc">Precio: menor a mayor</option>
             <option value="price-desc">Precio: mayor a menor</option>
             <option value="name-asc">Nombre: A-Z</option>

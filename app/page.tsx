@@ -106,6 +106,8 @@ export default function Home() {
     if (sortBy !== 'default') {
       result = [...result].sort((a, b) => {
         switch (sortBy) {
+          case 'recent':
+            return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
           case 'price-asc':
             return parsePrice(a.price) - parsePrice(b.price);
           case 'price-desc':
@@ -544,7 +546,6 @@ export default function Home() {
           onAddProduct={handleAddProduct}
           onDeleteProduct={handleDeleteProduct}
           onUpdateProduct={handleUpdateProduct}
-          onSaveProducts={saveProducts}
           onResetProducts={handleResetProducts}
           onLogout={handleLogout}
           onClose={() => setShowAdminPanel(false)}

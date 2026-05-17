@@ -11,6 +11,7 @@ export interface Product {
     category: string;
     categoryColor: string;
     categoryEmoji: string;
+    createdAt?: string;
 }
 
 export interface Category {
