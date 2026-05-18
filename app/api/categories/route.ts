@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCategoryDefinitions, saveCategoryDefinition } from '../../../lib/db';
+import { getCategoryDefinitions, saveCategoryDefinition, deleteCategoryDefinition } from '../../../lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -40,17 +40,46 @@ export async function POST(request: NextRequest) {
     }
     
     await saveCategoryDefinition(category);
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       success: true,
       message: 'Category saved successfully'
     });
   } catch (error) {
     console.error('Error saving category:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to save category',
       details: error instanceof Error ? error.message : 'Unknown error',
-      success: false 
+      success: false
+    }, { status: 500 });
+  }
+}
+
+// DELETE - Delete category definition
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const name = searchParams.get('name');
+
+    if (!name) {
+      return NextResponse.json({
+        error: 'Category name is required',
+        success: false
+      }, { status: 400 });
+    }
+
+    await deleteCategoryDefinition(name);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Category deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return NextResponse.json({
+      error: 'Failed to delete category',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      success: false
     }, { status: 500 });
   }
 }

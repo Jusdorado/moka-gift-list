@@ -201,7 +201,7 @@ export async function getCategoryDefinitions(): Promise<CategoryDefinitionRow[]>
       name: row.name,
       emoji: row.emoji,
       color: row.color,
-      fields: row.fields || [],
+      fields: Array.isArray(row.fields) ? row.fields : (typeof row.fields === 'string' && row.fields ? JSON.parse(row.fields) : []),
     }));
   } catch (error) {
     console.error('Error fetching category definitions:', error);
@@ -222,19 +222,67 @@ export async function saveCategoryDefinition(category: {
       console.warn('Cannot save category: DATABASE_URL not configured');
       return;
     }
-    
+
     // Upsert category definition
     await sql`
       INSERT INTO category_definitions (id, name, emoji, color, fields)
       VALUES (${category.id}, ${category.name}, ${category.emoji}, ${category.color}, ${JSON.stringify(category.fields)})
-      ON CONFLICT (name) 
-      DO UPDATE SET 
+      ON CONFLICT (name)
+      DO UPDATE SET
         emoji = EXCLUDED.emoji,
         color = EXCLUDED.color,
         fields = EXCLUDED.fields
     `;
   } catch (error) {
     console.error('Error saving category definition:', error);
+    throw error;
+  }
+}
+
+export async function deleteCategoryDefinition(name: string): Promise<void> {
+  try {
+    const sql = getDb();
+    if (!sql) {
+      console.warn('Cannot delete category: DATABASE_URL not configured');
+      return;
+    }
+    await sql`DELETE FROM category_definitions WHERE name = ${name}`;
+  } catch (error) {
+    console.error('Error deleting category definition:', error);
+    throw error;
+  }
+}
+
+export async function deleteProductsByCategory(category: string): Promise<number> {
+  try {
+    const sql = getDb();
+    if (!sql) {
+      console.warn('Cannot delete products: DATABASE_URL not configured');
+      return 0;
+    }
+    const result = await sql`DELETE FROM products WHERE category = ${category}`;
+    return (result as unknown as { count: number }).count || 0;
+  } catch (error) {
+    console.error('Error deleting products by category:', error);
+    throw error;
+  }
+}
+
+export async function updateProductsCategory(oldCategory: string, newCategory: string): Promise<number> {
+  try {
+    const sql = getDb();
+    if (!sql) {
+      console.warn('Cannot update products: DATABASE_URL not configured');
+      return 0;
+    }
+    const result = await sql`
+      UPDATE products
+      SET category = ${newCategory}
+      WHERE category = ${oldCategory}
+    `;
+    return (result as unknown as { count: number }).count || 0;
+  } catch (error) {
+    console.error('Error updating products category:', error);
     throw error;
   }
 }

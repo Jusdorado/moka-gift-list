@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, X, LogOut, Package, Loader2, Sparkles, RefreshCw,
-  Search, ChevronDown, ChevronUp, Check, ImageOff, ExternalLink, Pencil, CheckCircle, Settings
+  Search, ChevronUp, Check, ImageOff, ExternalLink, Pencil, CheckCircle, Settings
 } from 'lucide-react';
 import { Product } from '../types';
 
@@ -46,6 +46,10 @@ export default function AdminPanel({
   const [newCatFields, setNewCatFields] = useState<CategoryField[]>([]);
   const [editingCat, setEditingCat] = useState<CategoryDef | null>(null);
   const [editCatFields, setEditCatFields] = useState<CategoryField[]>([]);
+  const [deleteCatModal, setDeleteCatModal] = useState<{ name: string; products: Product[] } | null>(null);
+  const [deleteCatAction, setDeleteCatAction] = useState<'confirm' | 'relocate' | 'individual' | null>(null);
+  const [relocateTarget, setRelocateTarget] = useState('');
+  const [productActions, setProductActions] = useState<Record<string, 'delete' | 'relocate' | null>>({});
   const urlInputRef = useRef<HTMLInputElement>(null);
 
   // Load category definitions
@@ -56,9 +60,9 @@ export default function AdminPanel({
   }, []);
 
   const categories = useMemo(() => {
-    const cats = [...new Set(products.map(p => p.category))].filter(Boolean);
+    const cats = [...new Set([...products.map(p => p.category), ...categoryDefs.map(c => c.name)])].filter(Boolean);
     return cats.sort();
-  }, [products]);
+  }, [products, categoryDefs]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
@@ -71,7 +75,27 @@ export default function AdminPanel({
   // Get fields for a category
   const getFieldsForCategory = (catName: string): CategoryField[] => {
     const def = categoryDefs.find(c => c.name === catName);
-    return def?.fields || [];
+    const fields = def?.fields;
+    return Array.isArray(fields) ? fields : [];
+  };
+
+  // Check if a category has a definition (even if fields is empty)
+  const hasCategoryDef = (catName: string): boolean => {
+    return !!categoryDefs.find(c => c.name === catName);
+  };
+
+  // Categories that exist in products but have no definition
+  const undefinedCategories = useMemo(() => {
+    const defined = new Set(categoryDefs.map(c => c.name));
+    return [...new Set(products.map(p => p.category))]
+      .filter(c => c && !defined.has(c))
+      .sort();
+  }, [products, categoryDefs]);
+
+  // Get emoji/color for a category from existing products
+  const getCategoryStyleFromProducts = (catName: string) => {
+    const p = products.find(pr => pr.category === catName);
+    return { emoji: p?.categoryEmoji || '📦', color: p?.categoryColor || '#d946ef' };
   };
 
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 2500); return () => clearTimeout(t); }, [toast]);
@@ -133,6 +157,83 @@ export default function AdminPanel({
     } catch { setToast('Error guardando categoría'); }
   };
 
+  // Delete category definition
+  const deleteCategory = async (name: string) => {
+    try {
+      await fetch(`/api/categories?name=${encodeURIComponent(name)}`, { method: 'DELETE' });
+      const res = await fetch('/api/categories');
+      const d = await res.json();
+      if (d.categories) setCategoryDefs(d.categories);
+      setToast('Categoría eliminada');
+    } catch { setToast('Error eliminando categoría'); }
+  };
+
+  // Open delete category modal
+  const openDeleteCat = (catName: string) => {
+    const catProducts = products.filter(p => p.category === catName);
+    setDeleteCatModal({ name: catName, products: catProducts });
+    setDeleteCatAction(catProducts.length > 0 ? 'confirm' : null);
+    setRelocateTarget('');
+    setProductActions({});
+  };
+
+  // Execute delete category with chosen action
+  const executeDeleteCat = async () => {
+    if (!deleteCatModal) return;
+    const catName = deleteCatModal.name;
+
+    if (deleteCatAction === 'relocate' && relocateTarget) {
+      try {
+        await fetch('/api/products', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'relocate', category: catName, newCategory: relocateTarget }),
+        });
+        setToast(`Productos reubicados a ${relocateTarget}`);
+      } catch { setToast('Error reubicando productos'); }
+    } else if (deleteCatAction === 'confirm') {
+      try {
+        await fetch('/api/products', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', category: catName }),
+        });
+        setToast('Productos eliminados');
+      } catch { setToast('Error eliminando productos'); }
+    } else if (deleteCatAction === 'individual') {
+      const toDelete = Object.entries(productActions).filter(([, action]) => action === 'delete').map(([id]) => id);
+      const toRelocate = Object.entries(productActions).filter(([, action]) => action === 'relocate').map(([id]) => id);
+
+      if (toDelete.length > 0) {
+        try {
+          await fetch('/api/products', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'deleteMultiple', productIds: toDelete }),
+          });
+          setToast(`${toDelete.length} producto${toDelete.length > 1 ? 's' : ''} eliminado${toDelete.length > 1 ? 's' : ''}`);
+        } catch { setToast('Error eliminando productos'); }
+      }
+
+      if (toRelocate.length > 0 && relocateTarget) {
+        try {
+          await fetch('/api/products', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'relocateMultiple', productIds: toRelocate, newCategory: relocateTarget }),
+          });
+          setToast(`${toRelocate.length} producto${toRelocate.length > 1 ? 's' : ''} reubicado${toRelocate.length > 1 ? 's' : ''}`);
+        } catch { setToast('Error reubicando productos'); }
+      }
+    }
+
+    await deleteCategory(catName);
+    setDeleteCatModal(null);
+    setDeleteCatAction(null);
+    setRelocateTarget('');
+    setProductActions({});
+  };
+
   // Add product
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,6 +273,18 @@ export default function AdminPanel({
         categoryColor: def?.color || existing?.categoryColor || '#d946ef',
       }));
     }
+  };
+
+  // Edit category select handler
+  const handleEditCategorySelect = (val: string) => {
+    const def = categoryDefs.find(c => c.name === val);
+    const existing = products.find(p => p.category === val);
+    setEditForm(prev => ({
+      ...prev,
+      category: val,
+      categoryEmoji: def?.emoji || existing?.categoryEmoji || prev.categoryEmoji,
+      categoryColor: def?.color || existing?.categoryColor || prev.categoryColor,
+    }));
   };
 
   // Edit
@@ -344,6 +457,13 @@ export default function AdminPanel({
                   }
                 )
               )}
+              {!newCategoryMode && newProduct.category && !hasCategoryDef(newProduct.category) && (
+                <div className="grid grid-cols-3 gap-2">
+                  <input type="text" placeholder="Talla" value={newProduct.size} onChange={e => setNewProduct({ ...newProduct, size: e.target.value })} className={inputCls} style={inputStyle} />
+                  <input type="text" placeholder="Color" value={newProduct.color} onChange={e => setNewProduct({ ...newProduct, color: e.target.value })} className={inputCls} style={inputStyle} />
+                  <input type="text" placeholder="Autor" value={newProduct.author} onChange={e => setNewProduct({ ...newProduct, author: e.target.value })} className={inputCls} style={inputStyle} />
+                </div>
+              )}
 
               <label className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--moka-500)' }}>Precio</label>
               <input type="text" placeholder="ej. 29,99€" value={newProduct.price}
@@ -353,18 +473,7 @@ export default function AdminPanel({
               <input type="url" placeholder="https://...imagen.jpg" value={newProduct.image}
                 onChange={e => setNewProduct({ ...newProduct, image: e.target.value })} className={inputCls} style={inputStyle} />
 
-              <button type="button" onClick={() => {
-                const adv = document.getElementById('adv-fields');
-                if (adv) adv.classList.toggle('hidden');
-              }} className="flex items-center gap-1.5 text-sm font-semibold w-full py-1" style={{ color: 'var(--moka-600)' }}>
-                <ChevronDown className="w-4 h-4" /> Más campos
-              </button>
-              <div id="adv-fields" className="hidden grid grid-cols-2 gap-3">
-                <input type="text" placeholder="Color" value={newProduct.color} onChange={e => setNewProduct({ ...newProduct, color: e.target.value })} className={inputCls} style={inputStyle} />
-                <input type="text" placeholder="Talla" value={newProduct.size} onChange={e => setNewProduct({ ...newProduct, size: e.target.value })} className={inputCls} style={inputStyle} />
-                <input type="text" placeholder="Autor" value={newProduct.author} onChange={e => setNewProduct({ ...newProduct, author: e.target.value })} className={inputCls + ' col-span-2'} style={inputStyle} />
-                <textarea placeholder="Descripción" value={newProduct.description} onChange={e => setNewProduct({ ...newProduct, description: e.target.value })} className={inputCls + ' col-span-2'} style={inputStyle} rows={2} />
-              </div>
+              <textarea placeholder="Descripción" value={newProduct.description} onChange={e => setNewProduct({ ...newProduct, description: e.target.value })} className={inputCls} style={inputStyle} rows={2} />
 
               <button type="submit" className="w-full px-6 py-3.5 text-white font-bold rounded-xl hover:shadow-xl transition-all mt-2"
                 style={{ background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' }}>Guardar Producto</button>
@@ -374,7 +483,7 @@ export default function AdminPanel({
           {/* ═══ TAB CATEGORIES ═══ */}
           {tab === 'categories' && (
             <div className="py-4 space-y-3">
-              <h3 className="text-sm font-bold" style={{ color: 'var(--moka-700)' }}>Categorías definidas</h3>
+              <h3 className="text-sm font-bold" style={{ color: 'var(--moka-700)' }}>Todas las categorías</h3>
               {categoryDefs.map(cat => (
                 <div key={cat.id} className="p-3 rounded-xl border" style={{ borderColor: editingCat?.id === cat.id ? 'var(--gold-500)' : 'var(--moka-200)', background: 'white' }}>
                   {editingCat?.id !== cat.id ? (
@@ -390,8 +499,12 @@ export default function AdminPanel({
                           {cat.fields.length === 0 && <span className="text-xs" style={{ color: 'var(--moka-400)' }}>Sin campos especiales</span>}
                         </div>
                       </div>
-                      <button onClick={() => { setEditingCat(cat); setEditCatFields([...cat.fields]); }}
-                        className="p-2 rounded-lg" style={{ color: 'var(--gold-600)' }}><Pencil className="w-4 h-4" /></button>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => { setEditingCat(cat); setEditCatFields([...cat.fields]); }}
+                          className="p-2 rounded-lg" style={{ color: 'var(--gold-600)' }}><Pencil className="w-4 h-4" /></button>
+                        <button onClick={() => openDeleteCat(cat.name)}
+                          className="p-2 rounded-lg" style={{ color: '#dc2626' }}><Trash2 className="w-4 h-4" /></button>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -413,7 +526,57 @@ export default function AdminPanel({
                   )}
                 </div>
               ))}
-              {categoryDefs.length === 0 && <p className="text-sm text-center py-6" style={{ color: 'var(--moka-400)' }}>No hay categorías definidas aún. Se crean al añadir productos con categoría nueva.</p>}
+              {undefinedCategories.map(catName => {
+                const style = getCategoryStyleFromProducts(catName);
+                const isEditing = editingCat?.name === catName;
+                return (
+                  <div key={`undef-${catName}`} className="p-3 rounded-xl border" style={{ borderColor: isEditing ? 'var(--gold-500)' : 'var(--moka-200)', background: 'white' }}>
+                    {!isEditing ? (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-bold text-sm" style={{ color: 'var(--moka-900)' }}>{style.emoji} {catName}</span>
+                          <div className="flex gap-1 mt-1 flex-wrap">
+                            <span className="text-xs" style={{ color: 'var(--moka-400)' }}>Sin definir — usa campos por defecto</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => {
+                            const newDef: CategoryDef = {
+                              id: `cat-${Date.now()}`,
+                              name: catName,
+                              emoji: style.emoji,
+                              color: style.color,
+                              fields: [],
+                            };
+                            setEditingCat(newDef);
+                            setEditCatFields([]);
+                          }} className="px-2 py-1 rounded-lg text-xs font-bold" style={{ color: 'var(--gold-600)', background: 'var(--moka-100)' }}>Definir</button>
+                          <button onClick={() => openDeleteCat(catName)}
+                            className="p-2 rounded-lg" style={{ color: '#dc2626' }}><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input type="text" value={editingCat.emoji} onChange={e => setEditingCat({ ...editingCat, emoji: e.target.value })}
+                            placeholder="Emoji" className={inputCls + ' w-16'} style={inputStyle} />
+                          <input type="text" value={editingCat.name} onChange={e => setEditingCat({ ...editingCat, name: e.target.value })}
+                            placeholder="Nombre" className={inputCls + ' flex-1'} style={inputStyle} />
+                          <input type="color" value={editingCat.color} onChange={e => setEditingCat({ ...editingCat, color: e.target.value })}
+                            className="w-10 h-10 rounded-lg border-2 cursor-pointer" style={{ borderColor: 'var(--moka-200)' }} />
+                        </div>
+                        {renderFieldEditor(editCatFields, 'edit')}
+                        <div className="flex gap-2 pt-2">
+                          <button onClick={() => { saveCategoryDef({ ...editingCat, fields: editCatFields }); setEditingCat(null); }}
+                            className="px-3 py-1.5 rounded-lg text-white text-xs font-bold" style={{ background: '#16a34a' }}>Guardar</button>
+                          <button onClick={() => setEditingCat(null)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ color: 'var(--moka-600)', background: 'var(--moka-100)' }}>Cancelar</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {categoryDefs.length === 0 && undefinedCategories.length === 0 && <p className="text-sm text-center py-6" style={{ color: 'var(--moka-400)' }}>No hay categorías aún. Se crean al añadir productos.</p>}
             </div>
           )}
 
@@ -505,15 +668,25 @@ export default function AdminPanel({
                         <input type="text" placeholder="Nombre" value={editForm.name || ''} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className={inputCls} style={inputStyle} />
                         <div className="grid grid-cols-2 gap-2">
                           <input type="text" placeholder="Precio" value={editForm.price || ''} onChange={e => setEditForm({ ...editForm, price: e.target.value })} className={inputCls} style={inputStyle} />
-                          <input type="text" placeholder="Categoría" value={editForm.category || ''} onChange={e => setEditForm({ ...editForm, category: e.target.value })} className={inputCls} style={inputStyle} />
+                          <select value={editForm.category || ''} onChange={e => handleEditCategorySelect(e.target.value)} className={inputCls} style={inputStyle}>
+                            <option value="">Categoría...</option>
+                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
                         </div>
                         <input type="url" placeholder="URL" value={editForm.url || ''} onChange={e => setEditForm({ ...editForm, url: e.target.value })} className={inputCls} style={inputStyle} />
                         <input type="url" placeholder="Imagen" value={editForm.image || ''} onChange={e => setEditForm({ ...editForm, image: e.target.value })} className={inputCls} style={inputStyle} />
-                        <div className="grid grid-cols-3 gap-2">
-                          <input type="text" placeholder="Talla" value={editForm.size || ''} onChange={e => setEditForm({ ...editForm, size: e.target.value })} className={inputCls} style={inputStyle} />
-                          <input type="text" placeholder="Color" value={editForm.color || ''} onChange={e => setEditForm({ ...editForm, color: e.target.value })} className={inputCls} style={inputStyle} />
-                          <input type="text" placeholder="Autor" value={editForm.author || ''} onChange={e => setEditForm({ ...editForm, author: e.target.value })} className={inputCls} style={inputStyle} />
-                        </div>
+                        {renderCategoryFields(editForm.category || '', { color: editForm.color, talla: editForm.size, size: editForm.size, autor: editForm.author, author: editForm.author }, (key, val) => {
+                          if (key === 'talla' || key === 'size') setEditForm(prev => ({ ...prev, size: val }));
+                          else if (key === 'autor' || key === 'author') setEditForm(prev => ({ ...prev, author: val }));
+                          else if (key === 'color') setEditForm(prev => ({ ...prev, color: val }));
+                        })}
+                        {!hasCategoryDef(editForm.category || '') && (
+                          <div className="grid grid-cols-3 gap-2">
+                            <input type="text" placeholder="Talla" value={editForm.size || ''} onChange={e => setEditForm({ ...editForm, size: e.target.value })} className={inputCls} style={inputStyle} />
+                            <input type="text" placeholder="Color" value={editForm.color || ''} onChange={e => setEditForm({ ...editForm, color: e.target.value })} className={inputCls} style={inputStyle} />
+                            <input type="text" placeholder="Autor" value={editForm.author || ''} onChange={e => setEditForm({ ...editForm, author: e.target.value })} className={inputCls} style={inputStyle} />
+                          </div>
+                        )}
                         <textarea placeholder="Descripción" value={editForm.description || ''} onChange={e => setEditForm({ ...editForm, description: e.target.value })} className={inputCls} style={inputStyle} rows={2} />
                       </div>
                     )}
@@ -533,6 +706,94 @@ export default function AdminPanel({
               style={{ background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' }}>
               <Check className="w-4 h-4" />{toast}
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Delete Category Modal */}
+        <AnimatePresence>
+          {deleteCatModal && (
+            <>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm"
+                onClick={() => { setDeleteCatModal(null); setDeleteCatAction(null); setRelocateTarget(''); setProductActions({}); }} />
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
+                <div className="w-full max-w-2xl max-h-[80vh] rounded-2xl shadow-2xl p-6 pointer-events-auto overflow-y-auto" style={{ background: 'var(--moka-50)' }}>
+                  <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--moka-900)' }}>¿Eliminar categoría?</h3>
+                  <p className="text-sm mb-4" style={{ color: 'var(--moka-600)' }}>
+                    <strong>{deleteCatModal.name}</strong>
+                    {deleteCatModal.products.length > 0 ? (
+                      <span> tiene <strong>{deleteCatModal.products.length}</strong> producto{deleteCatModal.products.length > 1 ? 's' : ''} asociado{deleteCatModal.products.length > 1 ? 's' : ''}.</span>
+                    ) : (
+                      <span> no tiene productos asociados.</span>
+                    )}
+                  </p>
+
+                  {!deleteCatAction && (
+                    <div className="flex gap-2">
+                      <button onClick={() => { setDeleteCatModal(null); }} className="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold" style={{ color: 'var(--moka-600)', background: 'var(--moka-100)' }}>Cancelar</button>
+                      <button onClick={executeDeleteCat} className="flex-1 px-4 py-2.5 rounded-xl text-white text-xs font-bold" style={{ background: '#dc2626' }}>Eliminar</button>
+                    </div>
+                  )}
+
+                  {deleteCatAction === 'confirm' && (
+                    <div className="space-y-3">
+                      <p className="text-xs" style={{ color: 'var(--moka-500)' }}>¿Qué quieres hacer con los {deleteCatModal.products.length} producto{deleteCatModal.products.length > 1 ? 's' : ''}?</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button onClick={() => setDeleteCatAction('relocate')} className="px-3 py-2.5 rounded-xl text-xs font-bold" style={{ color: 'var(--gold-700)', background: 'var(--gold-100)' }}>Reubicar todos</button>
+                        <button onClick={executeDeleteCat} className="px-3 py-2.5 rounded-xl text-white text-xs font-bold" style={{ background: '#dc2626' }}>Borrar todos</button>
+                        <button onClick={() => setDeleteCatAction('individual')} className="px-3 py-2.5 rounded-xl text-xs font-bold" style={{ color: 'var(--moka-700)', background: 'var(--moka-200)' }}>Por separado</button>
+                      </div>
+                      <button onClick={() => { setDeleteCatModal(null); setDeleteCatAction(null); }} className="w-full px-4 py-2 rounded-xl text-xs font-bold" style={{ color: 'var(--moka-600)', background: 'var(--moka-100)' }}>Cancelar</button>
+                    </div>
+                  )}
+
+                  {deleteCatAction === 'relocate' && (
+                    <div className="space-y-3">
+                      <p className="text-xs" style={{ color: 'var(--moka-500)' }}>Selecciona la categoría destino:</p>
+                      <select value={relocateTarget} onChange={e => setRelocateTarget(e.target.value)} className={inputCls} style={inputStyle}>
+                        <option value="">Selecciona...</option>
+                        {categories.filter(c => c !== deleteCatModal.name).map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setDeleteCatAction('confirm'); setRelocateTarget(''); }} className="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold" style={{ color: 'var(--moka-600)', background: 'var(--moka-100)' }}>Atrás</button>
+                        <button onClick={executeDeleteCat} disabled={!relocateTarget} className="flex-1 px-4 py-2.5 rounded-xl text-white text-xs font-bold disabled:opacity-50" style={{ background: '#16a34a' }}>Confirmar reubicación</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {deleteCatAction === 'individual' && (
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold mb-2" style={{ color: 'var(--moka-700)' }}>Elige acción para cada producto:</p>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {deleteCatModal.products.map(prod => (
+                          <div key={prod.id} className="p-2 rounded-lg border" style={{ borderColor: 'var(--moka-200)', background: 'white' }}>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs flex-1 font-semibold" style={{ color: 'var(--moka-900)' }}>{prod.name}</span>
+                              <div className="flex gap-1">
+                                <button onClick={() => setProductActions(prev => ({ ...prev, [prod.id]: null }))} className="px-2 py-1 rounded text-xs" style={{ background: productActions[prod.id] === null ? 'var(--moka-300)' : 'var(--moka-100)', color: 'var(--moka-700)' }}>Sin cambios</button>
+                                <button onClick={() => setProductActions(prev => ({ ...prev, [prod.id]: 'relocate' }))} className="px-2 py-1 rounded text-xs" style={{ background: productActions[prod.id] === 'relocate' ? 'var(--gold-300)' : 'var(--gold-100)', color: 'var(--gold-700)' }}>Reubicar</button>
+                                <button onClick={() => setProductActions(prev => ({ ...prev, [prod.id]: 'delete' }))} className="px-2 py-1 rounded text-xs" style={{ background: productActions[prod.id] === 'delete' ? '#fca5a5' : '#fee2e2', color: '#dc2626' }}>Borrar</button>
+                              </div>
+                            </div>
+                            {productActions[prod.id] === 'relocate' && (
+                              <select onChange={e => setRelocateTarget(e.target.value)} className={inputCls + ' mt-2 text-xs'} style={inputStyle}>
+                                <option value="">Selecciona categoría...</option>
+                                {categories.filter(c => c !== deleteCatModal.name).map(c => <option key={c} value={c}>{c}</option>)}
+                              </select>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <button onClick={() => { setDeleteCatAction('confirm'); setProductActions({}); }} className="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold" style={{ color: 'var(--moka-600)', background: 'var(--moka-100)' }}>Atrás</button>
+                        <button onClick={executeDeleteCat} className="flex-1 px-4 py-2.5 rounded-xl text-white text-xs font-bold" style={{ background: '#16a34a' }}>Aplicar cambios</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </motion.div>
