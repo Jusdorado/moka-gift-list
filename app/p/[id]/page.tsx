@@ -4,7 +4,7 @@ import { getProductById } from '../../../lib/db';
 import { Product } from '../../../types';
 import ClientRedirect from '../../../components/ClientRedirect';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gifts.justogarcia.es';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://moka-gift-list.vercel.app';
 export const dynamic = 'force-dynamic';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.svg`;
 

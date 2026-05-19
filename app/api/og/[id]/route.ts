@@ -6,7 +6,7 @@ export const runtime = 'edge';
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gifts.justogarcia.es';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://moka-gift-list.vercel.app';
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
