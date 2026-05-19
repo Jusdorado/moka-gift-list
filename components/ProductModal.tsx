@@ -75,7 +75,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           {product.image && !imageError ? (
             <div className="relative w-full h-64 md:h-80 overflow-hidden">
               <img 
-                src={`/api/image-proxy?url=${encodeURIComponent(product.image)}`}
+                src={product.image}
                 alt={product.name}
                 className="w-full h-full object-cover"
                 onError={() => setImageError(true)}
