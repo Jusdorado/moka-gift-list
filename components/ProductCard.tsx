@@ -40,7 +40,7 @@ export default function ProductCard({ product, isPurchased, onClick, onShare }: 
             {product.image && !imageError ? (
                 <div className="relative w-full h-32 sm:h-40 overflow-hidden">
                     <img 
-                        src={`/api/image-proxy?url=${encodeURIComponent(product.image)}`}
+                        src={product.image}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         onError={() => setImageError(true)}
