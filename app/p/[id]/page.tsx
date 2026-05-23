@@ -75,9 +75,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
     };
   }
 
-  const ogImage = product.image
-    ? (product.image.startsWith('http') ? product.image : `${SITE_URL}${product.image}`)
-    : `${SITE_URL}/api/og/${product.id}`;
+  const ogImage = `${SITE_URL}/api/og/${product.id}`;
 
   const description = buildDescription(product);
 
