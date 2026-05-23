@@ -16,14 +16,18 @@ export default function ProductGrid({ products, purchasedState, prefillProductId
 
     const handleShare = (product: Product) => {
         const shareUrl = `${window.location.origin}/p/${product.id}`;
+        const parts = [product.name];
+        if (product.price) parts.push(`Precio: ${product.price}`);
+        parts.push(`Categoría: ${product.category}`);
+        const shareText = parts.join(' · ');
         if (navigator.share) {
             navigator.share({
                 title: product.name,
-                text: product.category,
+                text: shareText,
                 url: shareUrl,
             }).catch(() => {/* ignore */});
         } else if (navigator.clipboard) {
-            navigator.clipboard.writeText(shareUrl).then(() => {
+            navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
                 alert('Enlace copiado al portapapeles');
             }).catch(() => {
                 window.open(shareUrl, '_blank');

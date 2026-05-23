@@ -4,7 +4,7 @@ import { getProductById } from '../../../lib/db';
 import { Product } from '../../../types';
 import ClientRedirect from '../../../components/ClientRedirect';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://moka-gift-list.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gifts.justogarcia.es';
 export const dynamic = 'force-dynamic';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.svg`;
 
@@ -32,9 +32,10 @@ function buildDescription(product: Product) {
   return parts.join(' · ').slice(0, 200) || product.name;
 }
 
-export async function generateMetadata({ params, searchParams }: { params: Promise<{ id?: string }>; searchParams?: { product?: string } }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ id?: string }>; searchParams: Promise<{ product?: string } | undefined> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const productId = resolvedParams?.id || searchParams?.product;
+  const resolvedSearchParams = await searchParams;
+  const productId = resolvedParams?.id || resolvedSearchParams?.product;
   if (!productId) {
     return {
       title: 'Moka Gift List',
@@ -74,7 +75,9 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
     };
   }
 
-  const ogImage = product.image ? `${SITE_URL}/api/og/${product.id}` : DEFAULT_OG_IMAGE;
+  const ogImage = product.image
+    ? (product.image.startsWith('http') ? product.image : `${SITE_URL}${product.image}`)
+    : `${SITE_URL}/api/og/${product.id}`;
 
   const description = buildDescription(product);
 
@@ -105,9 +108,10 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   };
 }
 
-export default async function ProductSharePage({ params, searchParams }: { params: Promise<{ id?: string }>; searchParams?: { product?: string } }) {
+export default async function ProductSharePage({ params, searchParams }: { params: Promise<{ id?: string }>; searchParams: Promise<{ product?: string } | undefined> }) {
   const resolvedParams = await params;
-  const productId = resolvedParams?.id || searchParams?.product;
+  const resolvedSearchParams = await searchParams;
+  const productId = resolvedParams?.id || resolvedSearchParams?.product;
   if (!productId) {
     notFound();
   }

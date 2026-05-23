@@ -6,7 +6,7 @@ export const runtime = 'edge';
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://moka-gift-list.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gifts.justogarcia.es';
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
@@ -33,11 +33,59 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return new Response('Product not found', { status: 404 });
   }
 
-  const imageUrl = product?.image
+  const resolvedImageUrl = product?.image
     ? product.image.startsWith('http')
       ? product.image
       : `${SITE_URL}${product.image}`
-    : `${SITE_URL}/og-default.svg`;
+    : null;
+
+  const imagePanel = resolvedImageUrl
+    ? React.createElement(
+        'div',
+        {
+          style: {
+            flex: '0 0 auto',
+            width: 580,
+            height: '100%',
+            borderRadius: 18,
+            overflow: 'hidden',
+            display: 'flex',
+          },
+        },
+        React.createElement('img', {
+          src: resolvedImageUrl,
+          alt: product?.name || 'Product',
+          style: {
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+            borderRadius: 18,
+          },
+        })
+      )
+    : React.createElement(
+        'div',
+        {
+          style: {
+            flex: '0 0 auto',
+            width: 580,
+            height: '100%',
+            borderRadius: 18,
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #3c2a21 0%, #4f3424 35%, #2b1b12 100%)',
+            border: '2px dashed rgba(248,245,240,0.2)',
+          },
+        },
+        React.createElement(
+          'div',
+          { style: { fontSize: 120, lineHeight: 1 } },
+          product?.categoryEmoji || '🎁'
+        )
+      );
 
   const detailLines = [
     product?.size ? `Talla: ${product.size}` : null,
@@ -134,30 +182,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
             boxShadow: '0 32px 120px rgba(0,0,0,0.38)',
           },
         },
-        React.createElement(
-          'div',
-          {
-            style: {
-              flex: '0 0 auto',
-              width: 580,
-              height: '100%',
-              borderRadius: 18,
-              overflow: 'hidden',
-              display: 'flex',
-            },
-          },
-          React.createElement('img', {
-            src: imageUrl,
-            alt: name,
-            style: {
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-              borderRadius: 18,
-            },
-          })
-        ),
+        imagePanel,
         React.createElement(
           'div',
           {
