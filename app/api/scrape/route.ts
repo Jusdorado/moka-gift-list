@@ -202,7 +202,22 @@ function extractImage(html: string, url: string, domain: string, jsonLd: Record<
     }
   }
 
-  // 9) Agapea
+  // 9) Casio
+  if (!img && domain.includes('casio')) {
+    const patterns = [
+      /"image"\s*:\s*"([^"]+)"/,
+      /<img[^>]*class="[^"]*product[^"]*image[^"]*"[^>]*src="([^"]+)"/i,
+      /<img[^>]*id="[^"]*mainImage[^"]*"[^>]*src="([^"]+)"/i,
+      /<img[^>]*alt="[^"]*product[^"]*"[^>]*src="([^"]+)"/i,
+      /data-src="(https:\/\/[^"]*casio[^"]+\.(?:jpg|png|webp))"/i,
+    ];
+    for (const p of patterns) {
+      const m = html.match(p);
+      if (m?.[1]) { img = m[1]; break; }
+    }
+  }
+
+  // 10) Agapea
   if (!img && domain.includes('agapea')) {
     const patterns = [
       /<img[^>]*class="[^"]*portada[^"]*"[^>]*src="([^"]+)"/i,
@@ -381,7 +396,24 @@ function extractPrice(html: string, domain: string, jsonLd: Record<string, unkno
     if (m2?.[1]) return toEuro(m2[1]);
   }
 
-  // 7) Shopify stores
+  // 7) Casio
+  if (domain.includes('casio')) {
+    const patterns = [
+      /"price"\s*:\s*"?([0-9]+[.,]?[0-9]*)"/,
+      /<span[^>]*class="[^"]*price[^"]*"[^>]*>([0-9.,]+)/i,
+      /<div[^>]*class="[^"]*price[^"]*"[^>]*>([0-9.,]+)/i,
+      /data-price="([0-9.,]+)"/,
+    ];
+    for (const p of patterns) {
+      const m = html.match(p);
+      if (m?.[1]) {
+        const price = toEuro(m[1]);
+        if (price) return price;
+      }
+    }
+  }
+
+  // 8) Shopify stores
   if (html.includes('Shopify') || domain.includes('coldculture') || domain.includes('gng.la') || domain.includes('neweracap')) {
     const patterns = [
       /"price"\s*:\s*(\d+)/,
