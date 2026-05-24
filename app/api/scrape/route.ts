@@ -509,10 +509,6 @@ export async function POST(request: Request) {
     const name = extractName(html, domain, jsonLd);
     const price = extractPrice(html, domain, jsonLd);
 
-    if (!image && !name && !price) {
-      return Response.json({ error: 'No se encontraron datos del producto. El sitio puede estar bloqueando el acceso.' }, { status: 422 });
-    }
-
     return Response.json({ image, name, price });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Error desconocido';
