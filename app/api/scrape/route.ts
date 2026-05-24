@@ -494,7 +494,7 @@ export async function POST(request: Request) {
     const response = await fetchPage(url);
 
     if (!response) {
-      return Response.json({ error: 'No se pudo acceder a la URL. El sitio bloquea peticiones automáticas.' }, { status: 502 });
+      return Response.json({ image: null, name: null, price: null });
     }
 
     const html = await response.text();
@@ -502,7 +502,7 @@ export async function POST(request: Request) {
     // Detect Cloudflare/bot challenge page (returns HTML but is a block page)
     const isChallenge = html.includes('cf-browser-verification') || html.includes('Checking if the site connection is secure') || html.includes('Enable JavaScript and cookies to continue');
     if (isChallenge) {
-      return Response.json({ error: 'El sitio requiere verificación de navegador (Cloudflare). No es posible hacer scraping automático.' }, { status: 403 });
+      return Response.json({ image: null, name: null, price: null });
     }
 
     const jsonLd = parseAllJsonLd(html);
