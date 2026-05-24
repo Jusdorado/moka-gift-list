@@ -441,93 +441,41 @@ function extractPriceFromLd(block: Record<string, unknown>): string | null {
   return null;
 }
 
-// ── FETCH STRATEGIES ──
+// ── FETCH ──
 
-const BROWSER_AGENTS = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0',
-];
-
-function buildHeaders(ua: string, targetUrl: string) {
-  const origin = (() => { try { const u = new URL(targetUrl); return `${u.protocol}//${u.hostname}`; } catch { return ''; } })();
-  return {
-    'User-Agent': ua,
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-    'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'DNT': '1',
-    'Pragma': 'no-cache',
-    'Sec-Ch-Ua': '"Chromium";v="125", "Not/A)Brand";v="24"',
-    'Sec-Ch-Ua-Mobile': '?0',
-    'Sec-Ch-Ua-Platform': '"Windows"',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-User': '?1',
-    'Upgrade-Insecure-Requests': '1',
-    'Referer': origin || 'https://www.google.com/',
-  };
-}
-
-async function fetchDirect(url: string): Promise<Response | null> {
-  for (const ua of BROWSER_AGENTS) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const res = await fetch(url, {
-        headers: buildHeaders(ua, url),
-        signal: controller.signal,
-        redirect: 'follow',
-      });
-      clearTimeout(timeout);
-      if (res.ok) return res;
-    } catch {
-      clearTimeout(timeout);
-    }
-  }
-  return null;
-}
-
-async function fetchViaGooglebot(url: string): Promise<Response | null> {
+async function fetchPage(url: string): Promise<Response | null> {
+  const origin = (() => { try { const u = new URL(url); return `${u.protocol}//${u.hostname}`; } catch { return ''; } })();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'es-ES,es;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br',
         'Cache-Control': 'no-cache',
-        'From': 'googlebot(at)googlebot.com',
+        'Connection': 'keep-alive',
+        'DNT': '1',
+        'Sec-Ch-Ua': '"Chromium";v="125", "Not/A)Brand";v="24"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
+        'Referer': origin || 'https://www.google.com/',
       },
       signal: controller.signal,
       redirect: 'follow',
     });
     clearTimeout(timeout);
-    if (res.ok) return res;
+    return res.ok ? res : null;
   } catch {
     clearTimeout(timeout);
+    return null;
   }
-  return null;
-}
-
-async function fetchViaScraperApi(url: string): Promise<Response | null> {
-  const apiKey = process.env.SCRAPERAPI_KEY;
-  if (!apiKey) return null;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
-  try {
-    const proxyUrl = `https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=false`;
-    const res = await fetch(proxyUrl, { signal: controller.signal, redirect: 'follow' });
-    clearTimeout(timeout);
-    if (res.ok) return res;
-  } catch {
-    clearTimeout(timeout);
-  }
-  return null;
 }
 
 // ── MAIN HANDLER ──
@@ -541,18 +489,7 @@ export async function POST(request: Request) {
 
     const domain = getDomain(url);
 
-    // Strategy 1: Direct fetch with browser-like headers
-    let response = await fetchDirect(url);
-
-    // Strategy 2: Googlebot user agent (bypasses some anti-bot systems)
-    if (!response) {
-      response = await fetchViaGooglebot(url);
-    }
-
-    // Strategy 3: ScraperAPI proxy (requires SCRAPERAPI_KEY env var)
-    if (!response) {
-      response = await fetchViaScraperApi(url);
-    }
+    const response = await fetchPage(url);
 
     if (!response) {
       return Response.json({ error: 'No se pudo acceder a la URL. El sitio bloquea peticiones automáticas.' }, { status: 502 });
