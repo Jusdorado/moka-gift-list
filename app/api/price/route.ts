@@ -64,7 +64,12 @@ export async function GET(request: NextRequest) {
 
     // Extract price using multiple patterns
     let price = null;
-    const domain = new URL(url).hostname;
+    let domain = '';
+    try {
+      domain = new URL(url).hostname;
+    } catch {
+      domain = '';
+    }
 
     // Thomann.de/es patterns
     if (domain.includes('thomann')) {
