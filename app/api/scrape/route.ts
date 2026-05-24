@@ -522,30 +522,38 @@ export async function POST(request: Request) {
     }
 
     const domain = getDomain(url);
+    console.log(`[SCRAPE] URL: ${url}, Domain: ${domain}`);
 
     const response = await fetchPage(url);
 
     if (!response) {
+      console.log(`[SCRAPE] fetchPage returned null for ${url}`);
       return Response.json({ image: null, name: null, price: null });
     }
 
     const html = await response.text();
+    console.log(`[SCRAPE] HTML length: ${html.length}`);
 
     // Detect Cloudflare/bot challenge page (returns HTML but is a block page)
     const isChallenge = html.includes('cf-browser-verification') || html.includes('Checking if the site connection is secure') || html.includes('Enable JavaScript and cookies to continue');
     if (isChallenge) {
+      console.log(`[SCRAPE] Cloudflare challenge detected for ${url}`);
       return Response.json({ image: null, name: null, price: null });
     }
 
     const jsonLd = parseAllJsonLd(html);
+    console.log(`[SCRAPE] Found ${jsonLd.length} JSON-LD blocks`);
 
     const image = extractImage(html, url, domain, jsonLd);
     const name = extractName(html, domain, jsonLd);
     const price = extractPrice(html, domain, jsonLd);
 
+    console.log(`[SCRAPE] Extracted - Image: ${image ? 'yes' : 'no'}, Name: ${name ? 'yes' : 'no'}, Price: ${price ? 'yes' : 'no'}`);
+
     return Response.json({ image, name, price });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Error desconocido';
+    console.error(`[SCRAPE] Error: ${msg}`);
     return Response.json({ error: msg }, { status: 500 });
   }
 }
