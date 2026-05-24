@@ -25,6 +25,22 @@ async function fetchProductFallback(id: string) {
   }
 }
 
+async function canLoadImage(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+      },
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok && (res.headers.get('content-type')?.startsWith('image/') ?? false);
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = (await getProductById(id)) || (await fetchProductFallback(id));
@@ -33,11 +49,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return new Response('Product not found', { status: 404 });
   }
 
-  const resolvedImageUrl = product?.image
+  let resolvedImageUrl = product?.image
     ? product.image.startsWith('http')
       ? product.image
       : `${SITE_URL}${product.image}`
     : null;
+
+  if (resolvedImageUrl && !(await canLoadImage(resolvedImageUrl))) {
+    resolvedImageUrl = null;
+  }
 
   const imagePanel = resolvedImageUrl
     ? React.createElement(

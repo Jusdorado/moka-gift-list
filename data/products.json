@@ -1,5 +1,192 @@
 [
   {
+    "id": "prod-1779637968487",
+    "name": "WOLFBOX - Soplador de aire eléctrico inalámbrico de 110000 rpm, mini soplador ajustable de 3 engranajes con carga rápida",
+    "price": "42,99€",
+    "url": "https://www.amazon.es/WOLFBOX-MF50-inalámbrico-engranajes-computadora/dp/B0DSW7R4VN?adgrpid=57888166524&dib=eyJ2IjoiMSJ9.KioL1amAkf_DAkgRgwYL7zHHmdiXAVMWC9sTAQTC_YwTLk8qteZl89kGLi2-yXfCTygmVTCOfVR23xX4WarD5CHQAgYgL49Q5dzuAwIOWneCrmViUEgUe9Nzu8hDthIqrGOcDKsxmgyr4yDbUht1QxMa2jh8fHvXYyM33UY_CJHSrO2X-lT-QRBXdUFSVFunpzpCcf62NEeyDPayPXooDdXyxBaQhDGLNgvy5aAcM5_hxL_rMPq4yuma1jQya8GDFmRnF3shrTUb_s3r_Zx1rK4w4fWCmZ9J7Zm4l93jFjA.uXlca7DqpSLR5WVa_-MSZuiW0BkguLiMzFeiyA__P1o&dib_tag=se&hvadid=712269944830&hvdev=c&hvexpln=0&hvlocphy=9049155&hvnetw=g&hvocijid=7784161528010139854--&hvqmt=e&hvrand=7784161528010139854&hvtargid=kwd-323126042069&hydadcr=14584_2401416&keywords=soplador+de+aire+para+pc&mcid=05add4c534153145a8554a0654c43c87&qid=1779637549&sr=8-6",
+    "image": "https://m.media-amazon.com/images/I/713BEhBxXWL._AC_SL1500_.jpg",
+    "category": "Gaming y Confort",
+    "categoryColor": "#6BCF7F",
+    "categoryEmoji": "🎮",
+    "createdAt": "2026-05-24T13:52:55.458Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779637801974",
+    "name": "Yamaha HS 5",
+    "price": "158,00€",
+    "url": "https://www.thomann.es/yamaha_hs_5.htm",
+    "image": "https://www.thomann.de/thumb/opengraph/pics/prod/313033.jpg",
+    "category": "Música y Producción",
+    "categoryColor": "#9D4EDD",
+    "categoryEmoji": "🎵",
+    "createdAt": "2026-05-24T13:52:55.334Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779449372330",
+    "name": "STARTRC PHOTO Osmo Mobile 7 Bolsa,Bolsa de Hombro portátil para dji Osmo Mobile 7P/7 Accesorios Maletín de Viaje para dji Osmo Mobile 7P/7 Estabilizador Gimbal",
+    "price": "21,99 €",
+    "url": "https://www.amazon.es/STARTRC-PHOTO-port%C3%A1til-Accesorios-Estabilizador/dp/B0DXPYBSMM/ref=asc_df_B0DXPYBSMM?mcid=a7e87a296985325a86790366bc134e93&tag=googshopes-21&linkCode=df0&hvadid=807278226682&hvpos=&hvnetw=g&hvrand=6126692303842547012&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9049155&hvtargid=pla-2482415764050&psc=1&hvocijid=6126692303842547012-B0DXPYBSMM-&hvexpln=m-es73exp1&hvsb=powerasin",
+    "image": "https://m.media-amazon.com/images/I/91uxSdDOaHL._AC_SL1500_.jpg",
+    "category": "Gaming y Confort",
+    "categoryColor": "#6BCF7F",
+    "categoryEmoji": "🎮",
+    "createdAt": "2026-05-22T07:29:32.751Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779449068319",
+    "name": "Buy DJI OM Grip Tripod",
+    "price": "19,00€",
+    "url": "https://store.dji.com/product/osmo-grip-tripod",
+    "image": "https://se-cdn.djiits.com/tpc/uploads/spu/cover/68b071d3-59be-4044-929a-0aac6933efaf@ultra.png",
+    "category": "Gaming y Confort",
+    "categoryColor": "#6BCF7F",
+    "categoryEmoji": "🎮",
+    "createdAt": "2026-05-22T07:24:28.736Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136781904",
+    "name": "New Era Cap",
+    "price": "45,00€",
+    "url": "https://www.neweracap.eu/es/products/gorra-new-york-yankees-mlb-camo-59fifty-fitted-verde-70957098",
+    "image": "https://www.neweracap.eu/cdn/shop/files/70957098_3QL_629c1468-d85f-4555-8fee-c8a22a715991.jpg?v=1778562951",
+    "size": "7 3/8",
+    "color": "Camuflaje",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.902Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136753704",
+    "name": "Gorra MLB Wordmark San Diego Padres 59FIFTY Fitted Marrón Oscuro",
+    "price": "55,00€",
+    "url": "https://www.neweracap.eu/es/products/gorra-mlb-wordmark-san-diego-padres-59fifty-fitted-marron-oscuro-60846816",
+    "image": "https://www.neweracap.eu/cdn/shop/files/60846816_4_aed27e60-7aea-4f28-812a-96c585d357e8.jpg?v=1778544299",
+    "size": "7 3/8",
+    "color": "Marron",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.898Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136725931",
+    "name": "Gorra New Era Side Script 59FIFTY Fitted",
+    "price": "52,00€",
+    "url": "https://www.neweracap.eu/es/products/gorra-new-era-side-script-59fifty-fitted-60578261",
+    "image": "https://www.neweracap.eu/cdn/shop/files/60578261_2_d098b25c-82cd-4f9c-a657-9ce0fa43c8d9.jpg?v=1778708808",
+    "size": "7 3/8",
+    "color": "Negro",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.894Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136685851",
+    "name": "Gorra Gas Lamp Aston Villa FC 59FIFTY Fitted Negro",
+    "price": "49,00€",
+    "url": "https://www.neweracap.eu/es/products/gorra-gas-lamp-aston-villa-fc-59fifty-fitted-negro-60850862",
+    "image": "https://www.neweracap.eu/cdn/shop/files/60850862_2_096003e7-88eb-4a96-a887-73b1a56708d9.jpg?v=1778590342",
+    "size": "7 3/8",
+    "color": "Gris",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.889Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136639568",
+    "name": "Gorra MLB Wordmark Detroit Tigers 59FIFTY Fitted Azul Marino",
+    "price": "55,00€",
+    "url": "https://www.neweracap.eu/es/products/gorra-mlb-wordmark-detroit-tigers-59fifty-fitted-azul-marino-60792429",
+    "image": "https://www.neweracap.eu/cdn/shop/files/60792429_4.jpg?v=1778527908",
+    "size": "7 3/8",
+    "color": "Azul marino",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.885Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136608984",
+    "name": "Gorra MLB Wordmark Boston Red Sox 59FIFTY Fitted Azul Marino",
+    "price": "55,00€",
+    "url": "https://www.neweracap.eu/es/products/gorra-mlb-wordmark-boston-red-sox-59fifty-fitted-azul-marino-60792432",
+    "image": "https://www.neweracap.eu/cdn/shop/files/60792432_4.jpg?v=1778527851",
+    "size": "7 3/8",
+    "color": "Azul marino",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.881Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136563710",
+    "name": "New Era Cap",
+    "price": "95,00€",
+    "url": "https://www.neweracap.eu/es/products/gorra-mlb-cloud-faux-pearl-la-dodgers-59fifty-fitted-60955882",
+    "image": "https://www.neweracap.eu/cdn/shop/files/60955882_3QL.jpg?v=1778552458",
+    "size": "7 3/8",
+    "color": "Gris",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.876Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136489728",
+    "name": "59FIFTY Leather New York Yankees Black",
+    "price": "55,00€",
+    "url": "https://latiendadelasgorras.com/products/59fifty-leather-new-york-yankees-black",
+    "image": "https://latiendadelasgorras.com/cdn/shop/files/gorrasene-10_3648x4864.jpg",
+    "size": "7 3/8",
+    "color": "Negro",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.871Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779136423784",
+    "name": "59FIFTY Rhinestones New Era Script Black",
+    "price": "130,00€",
+    "url": "https://latiendadelasgorras.com/products/59fifty-rhinestones-new-era-script-black",
+    "image": "https://latiendadelasgorras.com/cdn/shop/files/gorrasene-52_38ad1fc4-0bf3-4653-adc3-6c814f7e2f22_3648x4864.jpg",
+    "size": "7 3/8",
+    "color": "Negro",
+    "category": "Gorras New Era",
+    "categoryColor": "#ffbb00",
+    "categoryEmoji": "🧢",
+    "createdAt": "2026-05-18T16:39:43.867Z",
+    "purchased": false
+  },
+  {
+    "id": "prod-1779091886100",
+    "name": "DeoVolenti",
+    "price": "146,95€",
+    "url": "https://dvolenti.com/products/washed-black?variant=55108471521653",
+    "image": "http://dvolenti.com/cdn/shop/files/bjb.png?v=1755572396",
+    "size": "M",
+    "category": "Ropa",
+    "categoryColor": "#e11f09",
+    "categoryEmoji": "👕",
+    "createdAt": "2026-05-18T04:11:34.524Z",
+    "purchased": false
+  },
+  {
     "id": "prod-1779091696659",
     "name": "FLAG ZIPPER NAVY",
     "price": "89,00€",
@@ -7,10 +194,10 @@
     "image": "http://gng.la/cdn/shop/files/1_57ac6e3a-5d4c-42f6-abdb-1e95dda5c447.jpg?v=1776261842",
     "size": "M",
     "color": "Azul marino",
-    "category": "Moda Urbana - GNG",
+    "category": "Ropa",
     "categoryColor": "#FF6B9D",
     "categoryEmoji": "👕",
-    "createdAt": "2026-05-18T06:08:24.962Z",
+    "createdAt": "2026-05-18T02:08:24.962Z",
     "purchased": false
   },
   {
@@ -23,7 +210,7 @@
     "category": "Gaming y Confort",
     "categoryColor": "#6BCF7F",
     "categoryEmoji": "🎮",
-    "createdAt": "2026-05-16T15:33:10.132Z",
+    "createdAt": "2026-05-16T11:33:10.132Z",
     "purchased": true
   },
   {
@@ -36,7 +223,7 @@
     "category": "Gaming y Confort",
     "categoryColor": "#6BCF7F",
     "categoryEmoji": "🎮",
-    "createdAt": "2026-05-16T15:33:10.132Z",
+    "createdAt": "2026-05-16T11:33:10.132Z",
     "purchased": true
   },
   {
@@ -49,7 +236,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2026-05-16T15:33:10.132Z",
+    "createdAt": "2026-05-16T11:33:10.132Z",
     "purchased": false
   },
   {
@@ -62,7 +249,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2026-05-16T15:33:10.132Z",
+    "createdAt": "2026-05-16T11:33:10.132Z",
     "purchased": false
   },
   {
@@ -75,7 +262,7 @@
     "category": "Joyería",
     "categoryColor": "#FFD700",
     "categoryEmoji": "💎",
-    "createdAt": "2026-05-16T15:33:10.132Z",
+    "createdAt": "2026-05-16T11:33:10.132Z",
     "purchased": false
   },
   {
@@ -88,7 +275,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2026-05-16T15:33:10.132Z",
+    "createdAt": "2026-05-16T11:33:10.132Z",
     "purchased": false
   },
   {
@@ -101,7 +288,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2026-05-16T15:33:10.132Z",
+    "createdAt": "2026-05-16T11:33:10.132Z",
     "purchased": false
   },
   {
@@ -113,7 +300,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-02-10T00:10:00.000Z",
+    "createdAt": "2026-02-09T22:10:00.000Z",
     "purchased": true
   },
   {
@@ -125,7 +312,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-02-10T00:00:00.000Z",
+    "createdAt": "2026-02-09T22:00:00.000Z",
     "purchased": true
   },
   {
@@ -137,7 +324,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-02-09T23:50:00.000Z",
+    "createdAt": "2026-02-09T21:50:00.000Z",
     "purchased": true
   },
   {
@@ -149,7 +336,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-02-09T23:40:00.000Z",
+    "createdAt": "2026-02-09T21:40:00.000Z",
     "purchased": true
   },
   {
@@ -161,7 +348,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-02-09T23:30:00.000Z",
+    "createdAt": "2026-02-09T21:30:00.000Z",
     "purchased": true
   },
   {
@@ -173,7 +360,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-02-09T23:20:00.000Z",
+    "createdAt": "2026-02-09T21:20:00.000Z",
     "purchased": true
   },
   {
@@ -185,7 +372,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-02-09T23:10:00.000Z",
+    "createdAt": "2026-02-09T21:10:00.000Z",
     "purchased": true
   },
   {
@@ -197,7 +384,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-02-09T23:00:00.000Z",
+    "createdAt": "2026-02-09T21:00:00.000Z",
     "purchased": true
   },
   {
@@ -210,7 +397,7 @@
     "category": "Gaming y Confort",
     "categoryColor": "#6BCF7F",
     "categoryEmoji": "🎮",
-    "createdAt": "2026-01-31T23:00:00.000Z",
+    "createdAt": "2026-01-31T21:00:00.000Z",
     "purchased": false
   },
   {
@@ -222,7 +409,7 @@
     "category": "Componentes PC",
     "categoryColor": "#FF8C42",
     "categoryEmoji": "🖥️",
-    "createdAt": "2026-01-15T00:00:00.000Z",
+    "createdAt": "2026-01-14T22:00:00.000Z",
     "purchased": false
   },
   {
@@ -235,7 +422,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2026-01-10T04:00:00.000Z",
+    "createdAt": "2026-01-10T02:00:00.000Z",
     "purchased": false
   },
   {
@@ -248,7 +435,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2026-01-04T23:00:00.000Z",
+    "createdAt": "2026-01-04T21:00:00.000Z",
     "purchased": false
   },
   {
@@ -261,7 +448,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-28T01:40:00.000Z",
+    "createdAt": "2025-12-27T23:40:00.000Z",
     "purchased": false
   },
   {
@@ -274,7 +461,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-28T01:30:00.000Z",
+    "createdAt": "2025-12-27T23:30:00.000Z",
     "purchased": false
   },
   {
@@ -287,7 +474,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-28T01:20:00.000Z",
+    "createdAt": "2025-12-27T23:20:00.000Z",
     "purchased": false
   },
   {
@@ -300,7 +487,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-28T01:10:00.000Z",
+    "createdAt": "2025-12-27T23:10:00.000Z",
     "purchased": false
   },
   {
@@ -313,7 +500,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-28T01:00:00.000Z",
+    "createdAt": "2025-12-27T23:00:00.000Z",
     "purchased": false
   },
   {
@@ -326,7 +513,7 @@
     "category": "Gaming y Confort",
     "categoryColor": "#6BCF7F",
     "categoryEmoji": "🎮",
-    "createdAt": "2025-12-22T06:00:00.000Z",
+    "createdAt": "2025-12-22T04:00:00.000Z",
     "purchased": true
   },
   {
@@ -340,7 +527,7 @@
     "category": "Gaming y Confort",
     "categoryColor": "#6BCF7F",
     "categoryEmoji": "🎮",
-    "createdAt": "2025-12-19T22:00:00.000Z",
+    "createdAt": "2025-12-19T20:00:00.000Z",
     "purchased": false
   },
   {
@@ -350,10 +537,10 @@
     "url": "https://coldcultureworldwide.com/products/camo-hoodie-zip-pink",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/camo-zip-hoodie-pink-6425112.jpg",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:40:00.000Z",
+    "createdAt": "2025-12-14T22:40:00.000Z",
     "purchased": false
   },
   {
@@ -363,10 +550,10 @@
     "url": "https://coldcultureworldwide.com/products/nocturne-beast-hoodie-dark-grey",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/nocturne-beast-zip-hoodie-dark-grey-8265323.jpg",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:35:00.000Z",
+    "createdAt": "2025-12-14T22:35:00.000Z",
     "purchased": false
   },
   {
@@ -376,10 +563,10 @@
     "url": "https://coldcultureworldwide.com/products/grid-zip-hoodie-tartan-dark-blue-grey",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/grid-zip-hoodie-tartan-dark-bluegrey-777490.jpg",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:30:00.000Z",
+    "createdAt": "2025-12-14T22:30:00.000Z",
     "purchased": false
   },
   {
@@ -389,10 +576,10 @@
     "url": "https://coldcultureworldwide.com/products/stud-zip-hoodie-light-grey",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/stud-zip-hoodie-light-grey-2920693.jpg",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:25:00.000Z",
+    "createdAt": "2025-12-14T22:25:00.000Z",
     "purchased": false
   },
   {
@@ -402,10 +589,10 @@
     "url": "https://coldcultureworldwide.com/products/demon-hoodie-grey",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/demon-hoodie-grey-6708768.jpg",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:20:00.000Z",
+    "createdAt": "2025-12-14T22:20:00.000Z",
     "purchased": false
   },
   {
@@ -415,10 +602,10 @@
     "url": "https://coldcultureworldwide.com/products/poison-knit-pink",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/poison-knit-pink-697118.jpg?v=1757349530",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:15:00.000Z",
+    "createdAt": "2025-12-14T22:15:00.000Z",
     "purchased": false
   },
   {
@@ -428,10 +615,10 @@
     "url": "https://coldcultureworldwide.com/products/rockstart-v2-pants-brown",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/rockstar-v2-pants-brown-2677017.jpg",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:10:00.000Z",
+    "createdAt": "2025-12-14T22:10:00.000Z",
     "purchased": false
   },
   {
@@ -441,10 +628,10 @@
     "url": "https://coldcultureworldwide.com/products/curved-hoodie-wine-red",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/curved-hoodie-wine-red-562255.jpg",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:05:00.000Z",
+    "createdAt": "2025-12-14T22:05:00.000Z",
     "purchased": false
   },
   {
@@ -454,10 +641,10 @@
     "url": "https://coldcultureworldwide.com/products/stars-hoodie-panther-pink",
     "image": "https://coldcultureworldwide.com/cdn/shop/files/stars-hoodie-panther-pink-796069.jpg",
     "size": "M",
-    "category": "Streetwear - Cold Culture",
+    "category": "Ropa",
     "categoryColor": "#00D9FF",
     "categoryEmoji": "🔥",
-    "createdAt": "2025-12-15T00:00:00.000Z",
+    "createdAt": "2025-12-14T22:00:00.000Z",
     "purchased": false
   },
   {
@@ -467,10 +654,10 @@
     "url": "https://gng.la/products/cali-t-shirt-ecru",
     "image": "https://gng.la/cdn/shop/files/reescala-52.jpg",
     "size": "M",
-    "category": "Moda Urbana - GNG",
+    "category": "Ropa",
     "categoryColor": "#FF6B9D",
     "categoryEmoji": "👕",
-    "createdAt": "2025-12-10T03:05:00.000Z",
+    "createdAt": "2025-12-10T01:05:00.000Z",
     "purchased": false
   },
   {
@@ -480,10 +667,10 @@
     "url": "https://gng.la/products/sand-zipper",
     "image": "https://gng.la/cdn/shop/files/reescala-58.jpg",
     "size": "M",
-    "category": "Moda Urbana - GNG",
+    "category": "Ropa",
     "categoryColor": "#FF6B9D",
     "categoryEmoji": "👕",
-    "createdAt": "2025-12-10T03:00:00.000Z",
+    "createdAt": "2025-12-10T01:00:00.000Z",
     "purchased": false
   },
   {
@@ -496,7 +683,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-07T23:15:00.000Z",
+    "createdAt": "2025-12-07T21:15:00.000Z",
     "purchased": false
   },
   {
@@ -509,7 +696,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-07T23:10:00.000Z",
+    "createdAt": "2025-12-07T21:10:00.000Z",
     "purchased": false
   },
   {
@@ -522,7 +709,7 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-07T23:05:00.000Z",
+    "createdAt": "2025-12-07T21:05:00.000Z",
     "purchased": false
   },
   {
@@ -535,21 +722,35 @@
     "category": "Música y Producción",
     "categoryColor": "#9D4EDD",
     "categoryEmoji": "🎵",
-    "createdAt": "2025-12-07T23:00:00.000Z",
+    "createdAt": "2025-12-07T21:00:00.000Z",
     "purchased": false
   },
   {
-    "name": "DeoVolenti",
-    "category": "Ropa",
-    "categoryEmoji": "👕",
-    "categoryColor": "#e11f09",
-    "price": "146,95€",
-    "url": "https://dvolenti.com/products/washed-black?variant=55108471521653",
-    "image": "http://dvolenti.com/cdn/shop/files/bjb.png?v=1755572396",
+    "name": "GA-2100SB-1A",
+    "category": "Relojes",
+    "categoryEmoji": "⌚",
+    "categoryColor": "#dfbc0c",
+    "price": "129,00€",
+    "url": "https://www.casio.com/es/watches/gshock/product.GA-2100SB-1A/",
+    "image": "https://www.casio.com/content/dam/casio/product-info/locales/es/es/timepiece/product/watch/G/GA/GA2/ga-2100sb-1a/assets/GA-2100SB-1A.png.transform/main-visual-pc/image.png",
     "description": "",
     "author": "",
     "color": "",
-    "size": "M",
-    "id": "prod-1779091886100"
+    "size": "",
+    "id": "prod-1779639091173"
+  },
+  {
+    "name": "GA-2100BM-7A5",
+    "category": "Relojes",
+    "categoryEmoji": "⌚",
+    "categoryColor": "#dfbc0c",
+    "price": "129,00€",
+    "url": "https://www.casio.com/es/watches/gshock/product.GA-2100BM-7A5/",
+    "image": "https://www.casio.com/content/dam/casio/product-info/locales/es/es/timepiece/product/watch/G/GA/GA2/ga-2100bm-7a5/assets/GA-2100BM-7A5.png.transform/main-visual-pc/image.png",
+    "description": "",
+    "author": "",
+    "color": "",
+    "size": "",
+    "id": "prod-1779639101282"
   }
 ]
