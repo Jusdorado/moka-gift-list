@@ -443,39 +443,41 @@ function extractPriceFromLd(block: Record<string, unknown>): string | null {
 
 // ── FETCH ──
 
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+];
+
 async function fetchPage(url: string): Promise<Response | null> {
-  const origin = (() => { try { const u = new URL(url); return `${u.protocol}//${u.hostname}`; } catch { return ''; } })();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'DNT': '1',
-        'Sec-Ch-Ua': '"Chromium";v="125", "Not/A)Brand";v="24"',
-        'Sec-Ch-Ua-Mobile': '?0',
-        'Sec-Ch-Ua-Platform': '"Windows"',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Upgrade-Insecure-Requests': '1',
-        'Referer': origin || 'https://www.google.com/',
-      },
-      signal: controller.signal,
-      redirect: 'follow',
-    });
-    clearTimeout(timeout);
-    return res.ok ? res : null;
-  } catch {
-    clearTimeout(timeout);
-    return null;
+  for (const ua of USER_AGENTS) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': ua,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+          'Cache-Control': 'no-cache',
+          'DNT': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'cross-site',
+          'Sec-Fetch-User': '?1',
+          'Upgrade-Insecure-Requests': '1',
+          'Referer': 'https://www.google.com/',
+        },
+        signal: controller.signal,
+        redirect: 'follow',
+      });
+      clearTimeout(timeout);
+      if (res.ok) return res;
+    } catch {
+      clearTimeout(timeout);
+    }
   }
+  return null;
 }
 
 // ── MAIN HANDLER ──
