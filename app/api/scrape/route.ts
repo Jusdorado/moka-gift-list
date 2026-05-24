@@ -482,6 +482,7 @@ const USER_AGENTS = [
 ];
 
 async function fetchPage(url: string): Promise<Response | null> {
+  let lastResponse: Response | null = null;
   for (const ua of USER_AGENTS) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
@@ -505,11 +506,14 @@ async function fetchPage(url: string): Promise<Response | null> {
       });
       clearTimeout(timeout);
       if (res.ok) return res;
+      // Keep non-OK response as fallback (may still contain useful HTML/meta tags)
+      if (!lastResponse) lastResponse = res;
     } catch {
       clearTimeout(timeout);
     }
   }
-  return null;
+  // Return the first non-OK response so we can still try to parse it
+  return lastResponse;
 }
 
 // ── MAIN HANDLER ──
@@ -527,12 +531,14 @@ export async function POST(request: Request) {
     const response = await fetchPage(url);
 
     if (!response) {
-      console.log(`[SCRAPE] fetchPage returned null for ${url}`);
+      console.log(`[SCRAPE] fetchPage returned null (all requests failed/timed out) for ${url}`);
       return Response.json({ image: null, name: null, price: null });
     }
 
+    console.log(`[SCRAPE] Got response status: ${response.status} for ${url}`);
     const html = await response.text();
-    console.log(`[SCRAPE] HTML length: ${html.length}`);
+    console.log(`[SCRAPE] HTML length: ${html.length}, first 200 chars: ${html.substring(0, 200).replace(/\n/g, ' ')}`);
+
 
     // Detect Cloudflare/bot challenge page (returns HTML but is a block page)
     const isChallenge = html.includes('cf-browser-verification') || html.includes('Checking if the site connection is secure') || html.includes('Enable JavaScript and cookies to continue');
