@@ -10,13 +10,11 @@ import ProductGrid from '../components/ProductGrid';
 import LoginModal from '../components/LoginModal';
 import AdminPanel from '../components/AdminPanel';
 import { Product } from '../types';
+import { parseDisplayPrice } from '../lib/extract/price';
 
 
 const parsePrice = (price?: string): number => {
-  if (!price) return 0;
-  // Remove currency symbols and convert comma to dot
-  const cleaned = price.replace(/[€$]/g, '').replace(/\./g, '').replace(',', '.').trim();
-  return parseFloat(cleaned) || 0;
+  return parseDisplayPrice(price);
 };
 
 export default function Home() {
