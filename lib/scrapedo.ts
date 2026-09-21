@@ -9,6 +9,19 @@
 
 const SCRAPEDO_TIMEOUT_MS = 60000;
 
+/* Nombres aceptados para el token, en orden de preferencia. SCRAPEDO_TOKEN se
+   mantiene por compatibilidad con despliegues antiguos. Un único sitio donde
+   leerlo: si no, el scraper y el widget de créditos pueden discrepar. */
+export const SCRAPEDO_ENV_VARS = ['SCRAPE_DO_API_KEY', 'SCRAPEDO_TOKEN'] as const;
+
+export function getScrapeDoToken(): string | null {
+  for (const name of SCRAPEDO_ENV_VARS) {
+    const value = process.env[name];
+    if (value) return value;
+  }
+  return null;
+}
+
 export function isChallengePage(html: string): boolean {
   return html.includes('cf-browser-verification')
     || html.includes('Checking if the site connection is secure')
@@ -19,7 +32,7 @@ export function isChallengePage(html: string): boolean {
 }
 
 async function scrapeDoRequest(url: string, extraParams: string, deadline?: number): Promise<string | null> {
-  const token = process.env.SCRAPE_DO_API_KEY || process.env.SCRAPEDO_TOKEN;
+  const token = getScrapeDoToken();
   if (!token) return null;
 
   const budget = deadline !== undefined ? deadline - Date.now() : SCRAPEDO_TIMEOUT_MS;
