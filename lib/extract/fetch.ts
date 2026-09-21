@@ -100,7 +100,7 @@ export async function fetchPage(url: string, deadline?: number): Promise<FetchRe
   const limit = Math.min(Date.now() + WORK_BUDGET_MS, hardLimit);
 
   // Scrape.do primero (1 cr plano → 25 cr super+render); el fetch directo con
-  // rotación de UAs queda como último recurso (p.ej. sin SCRAPEDO_TOKEN)
+  // rotación de UAs queda como último recurso (p.ej. sin SCRAPE_DO_API_KEY)
   const scraped = await fetchViaScrapeDo(url, limit - Date.now());
   if (scraped) {
     return { status: 'ok', html: scraped, httpStatus: 200 };

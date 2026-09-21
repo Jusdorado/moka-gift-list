@@ -1,40 +1,49 @@
-// Fetch usage stats from Scrape.do API
-export async function getScrapeDoUsage(apiKey: string) {
+/* Estadísticas de uso de la cuenta de Scrape.do.
+
+   Endpoint real: GET https://api.scrape.do/info?token=<KEY>
+   Respuesta:
+     { IsActive, ConcurrentRequest, MaxMonthlyRequest,
+       RemainingConcurrentRequest, RemainingMonthlyRequest }
+
+   Scrape.do no expone /account/usage ni acepta cabecera Bearer: devuelve 403. */
+
+export type ScrapeDoUsage = {
+  used: number;
+  limit: number;
+  percentage: number;
+  remaining: number;
+};
+
+export async function getScrapeDoUsage(apiKey: string): Promise<ScrapeDoUsage | null> {
   try {
-    console.log('[Scrape.do] Fetching usage with key:', apiKey.substring(0, 8) + '...');
-    const res = await fetch('https://api.scrape.do/account/usage', {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(`https://api.scrape.do/info?token=${encodeURIComponent(apiKey)}`, {
+      cache: 'no-store',
     });
 
-    console.log('[Scrape.do] Response status:', res.status);
-    
     if (!res.ok) {
-      const text = await res.text();
-      console.error(`Scrape.do API error: ${res.status}`, text);
+      console.error(`[Scrape.do] info error ${res.status}:`, await res.text());
       return null;
     }
 
     const data = await res.json();
-    console.log('[Scrape.do] Response data:', data);
-    
-    // Scrape.do returns: { credits_used, credits_limit, requests_used, requests_limit }
-    if (data.credits_limit && typeof data.credits_used === 'number') {
-      const percentage = Math.round((data.credits_used / data.credits_limit) * 100);
-      return {
-        used: data.credits_used,
-        limit: data.credits_limit,
-        percentage,
-        remaining: data.credits_limit - data.credits_used,
-      };
+    const limit = data.MaxMonthlyRequest;
+    const remaining = data.RemainingMonthlyRequest;
+
+    if (typeof limit !== 'number' || typeof remaining !== 'number' || limit <= 0) {
+      console.warn('[Scrape.do] Formato de respuesta inesperado:', data);
+      return null;
     }
 
-    console.warn('[Scrape.do] Invalid response format:', data);
-    return null;
+    const used = limit - remaining;
+    return {
+      used,
+      limit,
+      // Un decimal, igual que el dashboard de Scrape.do (p.ej. 4.10%)
+      percentage: Math.round((used / limit) * 1000) / 10,
+      remaining,
+    };
   } catch (error) {
-    console.error('Failed to fetch Scrape.do usage:', error);
+    console.error('[Scrape.do] Fallo al consultar el uso:', error);
     return null;
   }
 }

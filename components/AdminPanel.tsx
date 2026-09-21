@@ -52,6 +52,7 @@ export default function AdminPanel({
   const [relocateTarget, setRelocateTarget] = useState('');
   const [productActions, setProductActions] = useState<Record<string, 'delete' | 'relocate' | null>>({});
   const [scrapeDoUsage, setScrapeDoUsage] = useState<{ used: number; limit: number; percentage: number; remaining: number } | null>(null);
+  const [usageError, setUsageError] = useState<string | null>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
 
   // Load category definitions
@@ -65,19 +66,16 @@ export default function AdminPanel({
   useEffect(() => {
     const loadUsage = async () => {
       try {
-        console.log('[AdminPanel] Fetching Scrape.do usage...');
         const res = await fetch('/api/scrape-do-usage');
-        console.log('[AdminPanel] Response status:', res.status);
-        if (res.ok) {
-          const data = await res.json();
-          console.log('[AdminPanel] Usage data:', data);
-          setScrapeDoUsage(data);
-        } else {
-          const error = await res.json();
-          console.error('[AdminPanel] API error:', error);
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          setUsageError(body.error || `Error ${res.status}`);
+          return;
         }
-      } catch (error) {
-        console.error('[AdminPanel] Failed to load Scrape.do usage:', error);
+        setScrapeDoUsage(await res.json());
+        setUsageError(null);
+      } catch {
+        setUsageError('Sin conexión');
       }
     };
     loadUsage();
@@ -401,6 +399,12 @@ export default function AdminPanel({
     </div>
   );
 
+  // Verde con margen, ámbar a partir del 50% gastado, rojo a partir del 80%
+  const usageColor = !scrapeDoUsage ? '#10b981'
+    : scrapeDoUsage.percentage > 80 ? '#dc2626'
+    : scrapeDoUsage.percentage > 50 ? '#f59e0b'
+    : '#10b981';
+
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -419,21 +423,33 @@ export default function AdminPanel({
         {/* Scrape.do Usage Widget */}
         {scrapeDoUsage && (
           <div className="px-4 py-3 border-b" style={{ background: 'var(--moka-100)', borderColor: 'var(--moka-200)' }}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase" style={{ color: 'var(--moka-600)' }}>Créditos Scrape.do</span>
-              <span className="text-xs font-semibold" style={{ color: scrapeDoUsage.percentage > 80 ? '#dc2626' : scrapeDoUsage.percentage > 50 ? '#f59e0b' : '#10b981' }}>
-                {scrapeDoUsage.percentage}%
-              </span>
+            <div className="flex items-baseline justify-between mb-2">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold leading-none tabular-nums" style={{ color: usageColor }}>
+                  {scrapeDoUsage.remaining.toLocaleString('es-ES')}
+                </span>
+                <span className="text-xs font-semibold" style={{ color: 'var(--moka-600)' }}>
+                  peticiones restantes
+                </span>
+              </div>
+              <span className="text-xs font-bold uppercase" style={{ color: 'var(--moka-500)' }}>Scrape.do</span>
             </div>
             <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--moka-200)' }}>
               <div className="h-full transition-all duration-300" style={{
-                width: `${scrapeDoUsage.percentage}%`,
-                background: scrapeDoUsage.percentage > 80 ? '#dc2626' : scrapeDoUsage.percentage > 50 ? '#f59e0b' : '#10b981',
+                width: `${Math.max(scrapeDoUsage.percentage, 1)}%`,
+                background: usageColor,
               }} />
             </div>
-            <div className="text-xs mt-1.5" style={{ color: 'var(--moka-500)' }}>
-              {scrapeDoUsage.used} / {scrapeDoUsage.limit} ({scrapeDoUsage.remaining} restantes)
+            <div className="text-xs mt-1.5 tabular-nums" style={{ color: 'var(--moka-500)' }}>
+              {scrapeDoUsage.used.toLocaleString('es-ES')} / {scrapeDoUsage.limit.toLocaleString('es-ES')} usadas · {scrapeDoUsage.percentage.toFixed(1).replace('.', ',')}%
             </div>
+          </div>
+        )}
+
+        {/* Si no se pueden leer los créditos, decirlo en vez de no mostrar nada */}
+        {!scrapeDoUsage && usageError && (
+          <div className="px-4 py-2.5 border-b text-xs" style={{ background: 'var(--moka-100)', borderColor: 'var(--moka-200)', color: '#991b1b' }}>
+            No se pudieron leer los créditos de Scrape.do ({usageError})
           </div>
         )}
 

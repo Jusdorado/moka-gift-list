@@ -19,7 +19,7 @@ export function isChallengePage(html: string): boolean {
 }
 
 async function scrapeDoRequest(url: string, extraParams: string, deadline?: number): Promise<string | null> {
-  const token = process.env.SCRAPEDO_TOKEN;
+  const token = process.env.SCRAPE_DO_API_KEY || process.env.SCRAPEDO_TOKEN;
   if (!token) return null;
 
   const budget = deadline !== undefined ? deadline - Date.now() : SCRAPEDO_TIMEOUT_MS;
