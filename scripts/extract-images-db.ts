@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { fetchPageHtml } from '../lib/scrapedo';
+import { extractProduct } from '../lib/extract';
 
 // Cargar variables de entorno desde .env.local
 function loadEnv() {
@@ -17,62 +17,6 @@ function loadEnv() {
     });
   } catch (error) {
     console.warn('⚠️  Could not load .env.local file');
-  }
-}
-
-async function extractImage(url: string): Promise<string | null> {
-  try {
-    const html = await fetchPageHtml(url);
-    if (!html) return null;
-
-    let imageUrl = null;
-
-    // Amazon image patterns
-    const amazonImagePatterns = [
-      /"hiRes":"([^"]+)"/,
-      /"large":"([^"]+)"/,
-      /id="landingImage"[^>]*src="([^"]+)"/,
-    ];
-
-    // Generic image patterns
-    const genericImagePatterns = [
-      /<meta property="og:image" content="([^"]+)"/,
-      /<meta name="twitter:image" content="([^"]+)"/,
-      /<meta property="product:image" content="([^"]+)"/,
-    ];
-
-    // Try Amazon patterns first
-    for (const pattern of amazonImagePatterns) {
-      const match = html.match(pattern);
-      if (match && match[1]) {
-        imageUrl = match[1];
-        break;
-      }
-    }
-
-    // If not found, try generic patterns
-    if (!imageUrl) {
-      for (const pattern of genericImagePatterns) {
-        const match = html.match(pattern);
-        if (match && match[1]) {
-          imageUrl = match[1];
-          break;
-        }
-      }
-    }
-
-    // Clean URL
-    if (imageUrl) {
-      imageUrl = imageUrl.replace(/&amp;/g, '&');
-      if (imageUrl.includes('amazon')) {
-        imageUrl = imageUrl.replace(/\._.*?_\./, '.');
-      }
-    }
-
-    return imageUrl;
-  } catch (error) {
-    console.error(`Error extracting image:`, error);
-    return null;
   }
 }
 
@@ -95,6 +39,8 @@ async function main() {
   let updated = 0;
   let failed = 0;
   let skipped = 0;
+  let blocked = 0;
+  let notFound = 0;
 
   for (let i = 0; i < products.length; i++) {
     const product = products[i];
@@ -106,12 +52,18 @@ async function main() {
       continue;
     }
 
-    const imageUrl = await extractImage(product.url);
-    
-    if (imageUrl) {
+    const extraction = await extractProduct(product.url);
+
+    if (extraction.status === 'blocked') {
+      console.log(`  ⛔ Tienda bloqueada (Cloudflare/challenge)\n`);
+      blocked++;
+    } else if (extraction.status === 'not_found') {
+      console.log(`  ⚠️  Enlace caído (404/410)\n`);
+      notFound++;
+    } else if (extraction.image) {
       await sql`
         UPDATE products 
-        SET image = ${imageUrl}
+        SET image = ${extraction.image}
         WHERE id = ${product.id}
       `;
       console.log(`  ✅ Imagen encontrada y guardada\n`);
@@ -128,6 +80,8 @@ async function main() {
   console.log('\n✨ Proceso completado!');
   console.log(`✅ Imágenes añadidas: ${updated}`);
   console.log(`ℹ️  Ya tenían imagen: ${skipped}`);
+  console.log(`⛔ Bloqueados: ${blocked}`);
+  console.log(`⚠️  Enlaces caídos: ${notFound}`);
   console.log(`❌ Fallidas: ${failed}`);
 }
 

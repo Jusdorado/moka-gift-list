@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { fetchPageHtml } from '../lib/scrapedo';
+import { extractProduct } from '../lib/extract';
 
 // Cargar variables de entorno desde .env.local
 function loadEnv() {
@@ -17,70 +17,6 @@ function loadEnv() {
     });
   } catch (error) {
     console.warn('⚠️  Could not load .env.local file');
-  }
-}
-
-async function extractPrice(url: string): Promise<string | null> {
-  try {
-    const html = await fetchPageHtml(url);
-    if (!html) return null;
-
-    let price = null;
-    const domain = new URL(url).hostname;
-
-    // Thomann patterns
-    if (domain.includes('thomann')) {
-      const patterns = [
-        /"price":"([0-9]+[.,][0-9]+)"/,
-        /data-current-price="([0-9]+[.,][0-9]+)"/,
-        /<span[^>]*data-price[^>]*>[\s]*([0-9]+[.,][0-9]+)/i,
-      ];
-      for (const pattern of patterns) {
-        const match = html.match(pattern);
-        if (match) {
-          price = match[1].trim();
-          break;
-        }
-      }
-    }
-
-    // Casa del Libro patterns
-    if (!price && domain.includes('casadellibro')) {
-      const patterns = [
-        /<span[^>]*class="[^"]*price[^"]*"[^>]*>[\s]*([0-9]+[.,][0-9]+)\s*€/i,
-        /"price":\s*"?([0-9]+[.,][0-9]+)"?/,
-      ];
-      for (const pattern of patterns) {
-        const match = html.match(pattern);
-        if (match) {
-          price = match[1].trim();
-          break;
-        }
-      }
-    }
-
-    // Amazon patterns
-    if (!price && domain.includes('amazon')) {
-      const patterns = [
-        /<span[^>]*class="[^"]*a-price-whole[^"]*"[^>]*>([0-9]+[.,][0-9]*)/i,
-        /"price":\s*"?([0-9]+[.,][0-9]+)"?/,
-      ];
-      for (const pattern of patterns) {
-        const match = html.match(pattern);
-        if (match) {
-          price = match[1].trim();
-          break;
-        }
-      }
-    }
-
-    if (price) {
-      return price.replace(',', '.') + '€';
-    }
-    return null;
-  } catch (error) {
-    console.error('Error extracting price:', error);
-    return null;
   }
 }
 
@@ -104,6 +40,8 @@ async function main() {
   let updated = 0;
   let failed = 0;
   let skipped = 0;
+  let blocked = 0;
+  let notFound = 0;
 
   for (let i = 0; i < products.length; i++) {
     const product = products[i];
@@ -111,9 +49,16 @@ async function main() {
     console.log(`  URL: ${product.url}`);
     console.log(`  Precio actual: ${product.price || 'Sin precio'}`);
 
-    const newPrice = await extractPrice(product.url);
-    
-    if (newPrice) {
+    const extraction = await extractProduct(product.url);
+
+    if (extraction.status === 'blocked') {
+      console.log(`  ⛔ Tienda bloqueada (Cloudflare/challenge) — sin cambios\n`);
+      blocked++;
+    } else if (extraction.status === 'not_found') {
+      console.log(`  ⚠️  Enlace caído (404/410) — sin cambios\n`);
+      notFound++;
+    } else if (extraction.price) {
+      const newPrice = extraction.price;
       const oldPrice = product.price;
       
       if (oldPrice !== newPrice) {
@@ -143,6 +88,8 @@ async function main() {
   console.log('\n✨ Proceso completado!');
   console.log(`✅ Precios actualizados: ${updated}`);
   console.log(`ℹ️  Sin cambios: ${skipped}`);
+  console.log(`⛔ Bloqueados: ${blocked}`);
+  console.log(`⚠️  Enlaces caídos: ${notFound}`);
   console.log(`❌ Fallidos: ${failed}`);
 }
 

@@ -39,6 +39,7 @@ export default function AdminPanel({
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [bulkScraping, setBulkScraping] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+  const [scrapeFields, setScrapeFields] = useState<{ name?: { source: string; confidence: string }; price?: { source: string; confidence: string }; image?: { source: string; confidence: string } } | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [newCategoryMode, setNewCategoryMode] = useState(false);
@@ -108,6 +109,9 @@ export default function AdminPanel({
       const res = await fetch('/api/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
       const data = await res.json();
       if (data.error) { setToast('Error: ' + data.error); return; }
+      if (data.status === 'blocked') { setScrapeFields(null); setToast('Esta tienda bloquea la extracción (Cloudflare). Rellena los datos a mano'); return; }
+      if (data.status === 'not_found') { setScrapeFields(null); setToast('El enlace está caído (404)'); return; }
+      setScrapeFields(data.fields || null);
       if (target === 'new') {
         setNewProduct(prev => ({ ...prev, image: data.image || prev.image, name: data.name || prev.name, price: data.price || prev.price }));
       } else {
@@ -120,7 +124,7 @@ export default function AdminPanel({
   // Bulk scrape
   const doBulkScrape = async (ids: string[]) => {
     setBulkScraping(true); setBulkProgress({ done: 0, total: ids.length });
-    let updated = 0;
+    let updated = 0, blocked = 0, dead = 0;
     for (const id of ids) {
       const product = products.find(p => p.id === id);
       if (!product?.url) { setBulkProgress(p => ({ ...p, done: p.done + 1 })); continue; }
@@ -128,17 +132,21 @@ export default function AdminPanel({
         const res = await fetch('/api/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: product.url }) });
         const data = await res.json();
         if (!data.error) {
-          const updates: Partial<Product> = {};
-          if (data.image) updates.image = data.image;
-          if (data.name) updates.name = data.name;
-          if (data.price) updates.price = data.price;
-          if (Object.keys(updates).length > 0) { onUpdateProduct(id, updates); updated++; }
+          if (data.status === 'blocked') blocked++;
+          else if (data.status === 'not_found') dead++;
+          else {
+            const updates: Partial<Product> = {};
+            if (data.image) updates.image = data.image;
+            if (data.name) updates.name = data.name;
+            if (data.price) updates.price = data.price;
+            if (Object.keys(updates).length > 0) { onUpdateProduct(id, updates); updated++; }
+          }
         }
       } catch {}
       setBulkProgress(p => ({ ...p, done: p.done + 1 }));
     }
     setBulkScraping(false); setSelectedProducts(new Set()); setSelectMode(false);
-    setToast(`${updated} productos actualizados`);
+    setToast(`${updated} actualizados · ${blocked} bloqueados · ${dead} enlaces caídos`);
   };
 
   const handleUrlPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -417,6 +425,22 @@ export default function AdminPanel({
                   <img src={newProduct.image} alt="" className="w-14 h-14 object-cover rounded-lg" />
                   <span className="text-xs flex-1 truncate" style={{ color: 'var(--moka-600)' }}>Imagen detectada</span>
                   <button type="button" onClick={() => setNewProduct({ ...newProduct, image: '' })} className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ color: '#dc2626' }}>Quitar</button>
+                </div>
+              )}
+
+              {scrapeFields && (
+                <div className="flex gap-1.5 flex-wrap p-2 rounded-xl" style={{ background: 'var(--moka-100)' }}>
+                  {(['name', 'price', 'image'] as const).map(key => {
+                    const f = scrapeFields[key];
+                    if (!f || !f.source) return null;
+                    const low = f.confidence === 'low';
+                    return (
+                      <span key={key} className="text-xs px-2 py-0.5 rounded-full"
+                        style={{ background: low ? '#fef3c7' : 'var(--moka-200)', color: low ? '#92400e' : 'var(--moka-600)', fontWeight: low ? 700 : 400 }}>
+                        {key === 'name' ? 'Nombre' : key === 'price' ? 'Precio' : 'Imagen'}: {f.source}{low ? ' (revisar)' : ''}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
 

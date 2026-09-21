@@ -9,10 +9,13 @@
     "lint": "eslint",
     "init-db": "tsx scripts/init-db.ts",
     "update-prices-db": "tsx scripts/update-prices-db.ts",
-    "extract-images-db": "tsx scripts/extract-images-db.ts"
+    "extract-images-db": "tsx scripts/extract-images-db.ts",
+    "smoke-extract": "tsx scripts/smoke-extract.ts",
+    "test": "tsx tests/extract.test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
+    "cheerio": "^1.2.0",
     "framer-motion": "^12.23.25",
     "jspdf": "^3.0.4",
     "lucide-react": "^0.556.0",
