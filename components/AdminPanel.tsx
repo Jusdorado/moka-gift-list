@@ -65,13 +65,19 @@ export default function AdminPanel({
   useEffect(() => {
     const loadUsage = async () => {
       try {
+        console.log('[AdminPanel] Fetching Scrape.do usage...');
         const res = await fetch('/api/scrape-do-usage');
+        console.log('[AdminPanel] Response status:', res.status);
         if (res.ok) {
           const data = await res.json();
+          console.log('[AdminPanel] Usage data:', data);
           setScrapeDoUsage(data);
+        } else {
+          const error = await res.json();
+          console.error('[AdminPanel] API error:', error);
         }
       } catch (error) {
-        console.error('Failed to load Scrape.do usage:', error);
+        console.error('[AdminPanel] Failed to load Scrape.do usage:', error);
       }
     };
     loadUsage();
