@@ -51,6 +51,7 @@ export default function AdminPanel({
   const [deleteCatAction, setDeleteCatAction] = useState<'confirm' | 'relocate' | 'individual' | null>(null);
   const [relocateTarget, setRelocateTarget] = useState('');
   const [productActions, setProductActions] = useState<Record<string, 'delete' | 'relocate' | null>>({});
+  const [scrapeDoUsage, setScrapeDoUsage] = useState<{ used: number; limit: number; percentage: number; remaining: number } | null>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
 
   // Load category definitions
@@ -58,6 +59,24 @@ export default function AdminPanel({
     fetch('/api/categories').then(r => r.json()).then(d => {
       if (d.categories) setCategoryDefs(d.categories);
     }).catch(() => {});
+  }, []);
+
+  // Load Scrape.do usage
+  useEffect(() => {
+    const loadUsage = async () => {
+      try {
+        const res = await fetch('/api/scrape-do-usage');
+        if (res.ok) {
+          const data = await res.json();
+          setScrapeDoUsage(data);
+        }
+      } catch (error) {
+        console.error('Failed to load Scrape.do usage:', error);
+      }
+    };
+    loadUsage();
+    const interval = setInterval(loadUsage, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
   }, []);
 
   const categories = useMemo(() => {
@@ -390,6 +409,27 @@ export default function AdminPanel({
             <button onClick={onClose} className="p-2 rounded-lg text-white" style={{ background: 'rgba(255,255,255,0.2)' }}><X className="w-5 h-5" /></button>
           </div>
         </div>
+
+        {/* Scrape.do Usage Widget */}
+        {scrapeDoUsage && (
+          <div className="px-4 py-3 border-b" style={{ background: 'var(--moka-100)', borderColor: 'var(--moka-200)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase" style={{ color: 'var(--moka-600)' }}>Créditos Scrape.do</span>
+              <span className="text-xs font-semibold" style={{ color: scrapeDoUsage.percentage > 80 ? '#dc2626' : scrapeDoUsage.percentage > 50 ? '#f59e0b' : '#10b981' }}>
+                {scrapeDoUsage.percentage}%
+              </span>
+            </div>
+            <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--moka-200)' }}>
+              <div className="h-full transition-all duration-300" style={{
+                width: `${scrapeDoUsage.percentage}%`,
+                background: scrapeDoUsage.percentage > 80 ? '#dc2626' : scrapeDoUsage.percentage > 50 ? '#f59e0b' : '#10b981',
+              }} />
+            </div>
+            <div className="text-xs mt-1.5" style={{ color: 'var(--moka-500)' }}>
+              {scrapeDoUsage.used} / {scrapeDoUsage.limit} ({scrapeDoUsage.remaining} restantes)
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex border-b shrink-0" style={{ borderColor: 'var(--moka-200)' }}>
