@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { fetchPageHtml } from '../lib/scrapedo';
 
 // Cargar variables de entorno desde .env.local
 function loadEnv() {
@@ -21,17 +22,9 @@ function loadEnv() {
 
 async function extractPrice(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
-        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-      },
-    });
+    const html = await fetchPageHtml(url);
+    if (!html) return null;
 
-    if (!response.ok) return null;
-
-    const html = await response.text();
     let price = null;
     const domain = new URL(url).hostname;
 
