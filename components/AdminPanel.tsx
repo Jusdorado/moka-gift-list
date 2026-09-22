@@ -7,13 +7,43 @@ import {
   Search, ChevronUp, Check, ImageOff, ExternalLink, Pencil, CheckCircle, Settings
 } from 'lucide-react';
 import { Product } from '../types';
+import { MAX_BULK_ADD } from '../lib/constants';
 
 interface CategoryField { name: string; required: boolean; }
 interface CategoryDef { id: string; name: string; emoji: string; color: string; fields: CategoryField[]; }
 
+/* Una URL de la tanda de alta masiva, con lo extraído y lo que el usuario
+   ajusta antes de guardar. */
+type MultiStatus = 'loading' | 'ok' | 'failed';
+
+/* Mensaje por cada estado de fallo de extractProduct(). Todo lo que no sea
+   'ok' es un fallo: tratarlo como éxito deja la tarjeta vacía y sin explicar
+   por qué, que es peor que decirlo. */
+const EXTRACT_ERRORS: Record<string, string> = {
+  blocked: 'La tienda bloquea la extracción',
+  not_found: 'Enlace caído (404)',
+  fetch_failed: 'No se pudo cargar la página (tardó demasiado o está caída)',
+};
+
+interface MultiItem {
+  key: string;
+  url: string;
+  status: MultiStatus;
+  error?: string;
+  duplicate: boolean;
+  include: boolean;
+  name: string;
+  price: string;
+  image: string;
+  category: string;
+  categoryEmoji: string;
+  categoryColor: string;
+}
+
 interface AdminPanelProps {
   products: Product[];
   onAddProduct: (product: Omit<Product, 'id'>) => void;
+  onAddProducts: (products: Omit<Product, 'id'>[]) => Promise<{ ok: boolean; error?: string }>;
   onDeleteProduct: (id: string) => void;
   onUpdateProduct: (id: string, updates: Partial<Product>) => void;
   onResetProducts?: () => void;
@@ -27,9 +57,9 @@ const EMPTY_FORM = {
 };
 
 export default function AdminPanel({
-  products, onAddProduct, onDeleteProduct, onUpdateProduct, onLogout, onClose,
+  products, onAddProduct, onAddProducts, onDeleteProduct, onUpdateProduct, onLogout, onClose,
 }: AdminPanelProps) {
-  const [tab, setTab] = useState<'list' | 'add' | 'categories'>('list');
+  const [tab, setTab] = useState<'list' | 'add' | 'multi' | 'categories'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [scraping, setScraping] = useState(false);
   const [toast, setToast] = useState('');
@@ -53,6 +83,10 @@ export default function AdminPanel({
   const [productActions, setProductActions] = useState<Record<string, 'delete' | 'relocate' | null>>({});
   const [scrapeDoUsage, setScrapeDoUsage] = useState<{ used: number; limit: number; percentage: number; remaining: number } | null>(null);
   const [usageError, setUsageError] = useState<string | null>(null);
+  const [multiText, setMultiText] = useState('');
+  const [multiItems, setMultiItems] = useState<MultiItem[]>([]);
+  const [multiRunning, setMultiRunning] = useState(false);
+  const [multiSaving, setMultiSaving] = useState(false);
   const urlInputRef = useRef<HTMLInputElement>(null);
 
   // Load category definitions
@@ -142,6 +176,111 @@ export default function AdminPanel({
       }
       if (data.image || data.name) setToast('Datos extraídos ✨');
     } catch { setToast('Error de red'); } finally { setScraping(false); }
+  };
+
+  // ═══ Alta masiva ═══
+
+  const styleForCategory = (catName: string) => {
+    const def = categoryDefs.find(c => c.name === catName);
+    if (def) return { emoji: def.emoji || '📦', color: def.color || '#d946ef' };
+    return getCategoryStyleFromProducts(catName);
+  };
+
+  /* Acepta las URLs pegadas de cualquier manera (una por línea, separadas por
+     espacios o comas). Quita repetidas y corta en MAX_BULK_ADD. */
+  const parseMultiUrls = (text: string): string[] => {
+    const found = text
+      .split(/[\s,]+/)
+      .map(u => u.trim())
+      .filter(u => /^https?:\/\//i.test(u));
+    return [...new Set(found)].slice(0, MAX_BULK_ADD);
+  };
+
+  const patchMultiItem = (key: string, patch: Partial<MultiItem>) => {
+    // Actualización funcional: las N extracciones resuelven en paralelo y de
+    // otro modo se pisarían unas a otras.
+    setMultiItems(prev => prev.map(i => (i.key === key ? { ...i, ...patch } : i)));
+  };
+
+  const runMultiExtract = async () => {
+    const urls = parseMultiUrls(multiText);
+    if (urls.length === 0) { setToast('Pega al menos una URL válida'); return; }
+
+    const items: MultiItem[] = urls.map((url, index) => ({
+      key: `${Date.now()}-${index}`,
+      url,
+      status: 'loading',
+      duplicate: products.some(p => p.url === url),
+      include: true,
+      name: '', price: '', image: '',
+      category: '', categoryEmoji: '', categoryColor: '#d946ef',
+    }));
+    setMultiItems(items);
+    setMultiRunning(true);
+
+    // En paralelo a propósito: cada URL se lleva su propia función de 60s en
+    // Vercel. En serie, 5 x 45s de techo se saldrían del límite.
+    await Promise.all(items.map(async item => {
+      try {
+        const res = await fetch('/api/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: item.url }),
+        });
+        const data = await res.json();
+        if (data.error) { patchMultiItem(item.key, { status: 'failed', error: data.error }); return; }
+        if (data.status !== 'ok') {
+          patchMultiItem(item.key, { status: 'failed', error: EXTRACT_ERRORS[data.status] || 'No se pudo extraer' });
+          return;
+        }
+        patchMultiItem(item.key, {
+          status: 'ok',
+          name: data.name || '',
+          price: data.price || '',
+          image: data.image || '',
+        });
+      } catch {
+        patchMultiItem(item.key, { status: 'failed', error: 'Error de red' });
+      }
+    }));
+
+    setMultiRunning(false);
+  };
+
+  const setMultiCategory = (key: string, catName: string) => {
+    const style = styleForCategory(catName);
+    patchMultiItem(key, { category: catName, categoryEmoji: style.emoji, categoryColor: style.color });
+  };
+
+  const applyCategoryToAll = (catName: string) => {
+    if (!catName) return;
+    const style = styleForCategory(catName);
+    setMultiItems(prev => prev.map(i => ({ ...i, category: catName, categoryEmoji: style.emoji, categoryColor: style.color })));
+    setToast('Categoría aplicada a todas');
+  };
+
+  const resetMulti = () => { setMultiItems([]); setMultiText(''); };
+
+  const multiReady = multiItems.filter(i => i.include && i.name.trim() && i.category);
+
+  const saveMulti = async () => {
+    if (multiReady.length === 0) { setToast('Nada que guardar: revisa nombre y categoría'); return; }
+    const total = multiReady.length;
+    setMultiSaving(true);
+    const result = await onAddProducts(multiReady.map(i => ({
+      name: i.name.trim(),
+      url: i.url,
+      price: i.price.trim() || undefined,
+      image: i.image.trim() || undefined,
+      category: i.category,
+      categoryEmoji: i.categoryEmoji,
+      categoryColor: i.categoryColor,
+    })));
+    setMultiSaving(false);
+    if (!result.ok) { setToast(result.error || 'No se pudieron guardar'); return; }
+    setToast(`${total} producto${total > 1 ? 's' : ''} añadido${total > 1 ? 's' : ''} ✓`);
+    resetMulti();
+    setTab('list');
   };
 
   // Bulk scrape
@@ -455,11 +594,11 @@ export default function AdminPanel({
 
         {/* Tabs */}
         <div className="flex border-b shrink-0" style={{ borderColor: 'var(--moka-200)' }}>
-          {(['list', 'add', 'categories'] as const).map(t => (
+          {(['list', 'add', 'multi', 'categories'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className="flex-1 py-3 text-xs font-bold text-center transition-colors"
               style={{ color: tab === t ? 'var(--gold-600)' : 'var(--moka-500)', borderBottom: tab === t ? '3px solid var(--gold-500)' : '3px solid transparent' }}>
-              {t === 'list' ? `Productos (${products.length})` : t === 'add' ? '+ Añadir' : '⚙ Categorías'}
+              {t === 'list' ? `Lista (${products.length})` : t === 'add' ? '+ Uno' : t === 'multi' ? '+ Varios' : '⚙ Cat.'}
             </button>
           ))}
         </div>
@@ -564,6 +703,138 @@ export default function AdminPanel({
               <button type="submit" className="w-full px-6 py-3.5 text-white font-bold rounded-xl hover:shadow-xl transition-all mt-2"
                 style={{ background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' }}>Guardar Producto</button>
             </form>
+          )}
+
+          {/* ═══ TAB MULTI (alta masiva) ═══ */}
+          {tab === 'multi' && (
+            <div className="py-4 space-y-3">
+
+              {multiItems.length === 0 ? (
+                <>
+                  <label className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--moka-500)' }}>
+                    Pega hasta {MAX_BULK_ADD} enlaces
+                  </label>
+                  <textarea
+                    value={multiText}
+                    onChange={e => setMultiText(e.target.value)}
+                    placeholder={'https://tienda.com/producto-1\nhttps://tienda.com/producto-2'}
+                    rows={6}
+                    className={inputCls} style={{ ...inputStyle, fontFamily: 'ui-monospace, monospace', fontSize: '0.75rem' }} />
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--moka-500)' }}>
+                    Una por línea. Se extraen todas a la vez y luego revisas antes de guardar.
+                    Cada enlace gasta <strong>1 crédito</strong> de Scrape.do, o <strong>26</strong> si la tienda bloquea.
+                  </p>
+                  <button type="button" onClick={runMultiExtract}
+                    disabled={multiRunning || parseMultiUrls(multiText).length === 0}
+                    className="w-full px-6 py-3.5 text-white font-bold rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' }}>
+                    {multiRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    Extraer {parseMultiUrls(multiText).length > 0 ? `(${parseMultiUrls(multiText).length})` : ''}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="flex gap-2 items-center">
+                    <select defaultValue="" onChange={e => { applyCategoryToAll(e.target.value); e.target.value = ''; }}
+                      className={inputCls + ' flex-1'} style={inputStyle}>
+                      <option value="">Aplicar categoría a todas…</option>
+                      {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <button type="button" onClick={resetMulti}
+                      className="px-3 py-2.5 rounded-xl text-xs font-semibold shrink-0"
+                      style={{ background: 'var(--moka-100)', color: 'var(--moka-600)' }}>
+                      Empezar de nuevo
+                    </button>
+                  </div>
+
+                  {multiItems.map(item => (
+                    <div key={item.key} className="rounded-xl border-2 p-3 space-y-2 transition-opacity"
+                      style={{ borderColor: 'var(--moka-200)', background: 'white', opacity: item.include ? 1 : 0.5 }}>
+
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => patchMultiItem(item.key, { include: !item.include })}
+                          className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0"
+                          style={{ borderColor: item.include ? 'var(--gold-500)' : 'var(--moka-300)', background: item.include ? 'var(--gold-500)' : 'transparent' }}
+                          aria-label={item.include ? 'No añadir este' : 'Añadir este'}>
+                          {item.include && <Check className="w-3 h-3 text-white" />}
+                        </button>
+                        <span className="text-xs truncate flex-1" style={{ color: 'var(--moka-500)' }}>
+                          {item.url.replace(/^https?:\/\//, '').split('/')[0]}
+                        </span>
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--moka-400)' }}>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+
+                      {item.duplicate && (
+                        <p className="text-xs px-2 py-1 rounded-lg" style={{ background: '#fef3c7', color: '#92400e' }}>
+                          Ya tienes este enlace en la lista
+                        </p>
+                      )}
+
+                      {item.status === 'loading' && (
+                        <div className="flex items-center gap-2 py-2 text-xs" style={{ color: 'var(--moka-500)' }}>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Extrayendo…
+                        </div>
+                      )}
+
+                      {item.status === 'failed' && (
+                        <p className="text-xs px-2 py-1.5 rounded-lg" style={{ background: 'rgba(220,38,38,0.08)', color: '#991b1b' }}>
+                          {item.error}. Puedes rellenarlo a mano o quitarlo de la tanda.
+                        </p>
+                      )}
+
+                      {item.status === 'ok' && !item.name && (
+                        <p className="text-xs px-2 py-1.5 rounded-lg" style={{ background: '#fef3c7', color: '#92400e' }}>
+                          La página cargó pero no se encontró el nombre. Complétalo tú.
+                        </p>
+                      )}
+
+                      {item.status !== 'loading' && (
+                        <>
+                          <div className="flex gap-2">
+                            {item.image ? (
+                              <img src={item.image} alt="" className="w-14 h-14 object-cover rounded-lg shrink-0" />
+                            ) : (
+                              <div className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center" style={{ background: 'var(--moka-100)' }}>
+                                <ImageOff className="w-5 h-5" style={{ color: 'var(--moka-400)' }} />
+                              </div>
+                            )}
+                            <div className="flex-1 space-y-2 min-w-0">
+                              <input type="text" value={item.name} placeholder="Nombre *"
+                                onChange={e => patchMultiItem(item.key, { name: e.target.value })}
+                                className={inputCls} style={inputStyle} />
+                              <input type="text" value={item.price} placeholder="Precio"
+                                onChange={e => patchMultiItem(item.key, { price: e.target.value })}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                          </div>
+
+                          <select value={item.category} onChange={e => setMultiCategory(item.key, e.target.value)}
+                            className={inputCls} style={inputStyle}>
+                            <option value="">Categoría *</option>
+                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </>
+                      )}
+                    </div>
+                  ))}
+
+                  <button type="button" onClick={saveMulti} disabled={multiSaving || multiRunning || multiReady.length === 0}
+                    className="w-full px-6 py-3.5 text-white font-bold rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, var(--gold-500), var(--gold-600))' }}>
+                    {multiSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    {multiRunning ? 'Extrayendo…' : `Añadir ${multiReady.length} producto${multiReady.length === 1 ? '' : 's'}`}
+                  </button>
+
+                  {!multiRunning && multiReady.length < multiItems.filter(i => i.include).length && (
+                    <p className="text-xs text-center" style={{ color: 'var(--moka-500)' }}>
+                      Los que no tengan nombre y categoría se quedan fuera.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           )}
 
           {/* ═══ TAB CATEGORIES ═══ */}

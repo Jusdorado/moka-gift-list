@@ -101,6 +101,44 @@ export async function saveProducts(products: Product[]): Promise<void> {
   }
 }
 
+/* Alta de productos nuevos SIN tocar los existentes.
+   saveProducts() reescribe la tabla entera (DELETE + reinsert), lo que para un
+   alta es innecesario y arriesgado: si falla a medias te quedas sin lista. Aquí
+   se insertan solo los nuevos y en una única transacción, así que o entran
+   todos o no entra ninguno. */
+export async function addProducts(products: Product[]): Promise<Product[]> {
+  const sql = getDb();
+  if (!sql) throw new Error('DATABASE_URL no configurada');
+  if (products.length === 0) return [];
+
+  const createdAt = new Date().toISOString();
+  const rows = products.map((product, index) => ({
+    ...product,
+    // Date.now() solo no basta: varios productos de la misma tanda se crean en
+    // el mismo milisegundo y colisionarían en la PK.
+    id: product.id || `prod-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: product.createdAt || createdAt,
+  }));
+
+  await sql.transaction(
+    rows.map(p => sql`
+      INSERT INTO products (
+        id, name, price, url, image, size, description,
+        author, color, category, category_color, category_emoji, created_at, purchased
+      ) VALUES (
+        ${p.id}, ${p.name}, ${p.price || null},
+        ${p.url}, ${p.image || null}, ${p.size || null},
+        ${p.description || null}, ${p.author || null},
+        ${p.color || null}, ${p.category},
+        ${p.categoryColor}, ${p.categoryEmoji},
+        ${p.createdAt}, ${p.purchased || false}
+      )
+    `)
+  );
+
+  return rows;
+}
+
 export async function getProductById(id: string): Promise<Product | null> {
   try {
     const sql = getDb();

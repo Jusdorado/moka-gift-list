@@ -183,6 +183,31 @@ export default function Home() {
     await saveProducts(updatedProducts);
   };
 
+  /* Alta masiva: va contra /api/products/add, que solo inserta. No reutiliza
+     saveProducts() a propósito — ese reescribe la tabla entera y aquí no hace
+     falta arriesgar los productos que ya están. */
+  const handleAddProducts = async (
+    newProducts: Omit<Product, 'id'>[]
+  ): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const response = await fetch('/api/products/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: newProducts }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        return { ok: false, error: data.error || 'No se pudieron guardar' };
+      }
+      // El servidor genera los ids, así que se usan los productos que devuelve
+      setProducts(prev => [...prev, ...(data.products || [])]);
+      return { ok: true };
+    } catch (error) {
+      console.error('Error adding products:', error);
+      return { ok: false, error: 'Error de red' };
+    }
+  };
+
   const handleDeleteProduct = async (id: string) => {
     const updatedProducts = products.filter(p => p.id !== id);
     setProducts(updatedProducts);
@@ -558,6 +583,7 @@ export default function Home() {
         <AdminPanel
           products={products}
           onAddProduct={handleAddProduct}
+          onAddProducts={handleAddProducts}
           onDeleteProduct={handleDeleteProduct}
           onUpdateProduct={handleUpdateProduct}
           onResetProducts={handleResetProducts}
