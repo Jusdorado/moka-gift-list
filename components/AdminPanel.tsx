@@ -38,7 +38,24 @@ interface MultiItem {
   category: string;
   categoryEmoji: string;
   categoryColor: string;
+  // Huecos para los campos propios de la categoría (talla, color…)
+  size: string;
+  color: string;
+  author: string;
+  description: string;
 }
+
+/* Product solo tiene cuatro huecos libres, así que los campos que defines por
+   categoría se guardan según su nombre. Es el mismo mapeo que usa la pestaña
+   de alta individual; un campo con otro nombre se pinta pero no se guarda. */
+type FieldSlot = 'size' | 'color' | 'author' | 'description';
+
+const FIELD_SLOTS: Record<string, FieldSlot> = {
+  talla: 'size', size: 'size',
+  color: 'color',
+  autor: 'author', author: 'author',
+  descripción: 'description', descripcion: 'description', description: 'description',
+};
 
 interface AdminPanelProps {
   products: Product[];
@@ -214,6 +231,7 @@ export default function AdminPanel({
       include: true,
       name: '', price: '', image: '',
       category: '', categoryEmoji: '', categoryColor: '#d946ef',
+      size: '', color: '', author: '', description: '',
     }));
     setMultiItems(items);
     setMultiRunning(true);
@@ -261,7 +279,35 @@ export default function AdminPanel({
 
   const resetMulti = () => { setMultiItems([]); setMultiText(''); };
 
-  const multiReady = multiItems.filter(i => i.include && i.name.trim() && i.category);
+  // Valores que espera renderCategoryFields: claves en minúscula, y cada
+  // nombre alternativo apuntando al mismo hueco.
+  const multiFieldValues = (item: MultiItem): Record<string, string> => ({
+    talla: item.size, size: item.size,
+    color: item.color,
+    autor: item.author, author: item.author,
+    descripción: item.description, descripcion: item.description, description: item.description,
+  });
+
+  const setMultiField = (itemKey: string, fieldName: string, value: string) => {
+    const slot = FIELD_SLOTS[fieldName];
+    if (!slot) return;
+    patchMultiItem(itemKey, { [slot]: value } as Partial<MultiItem>);
+  };
+
+  /* Campos obligatorios de la categoría que siguen vacíos (p.ej. Talla en
+     Ropa). Sin esto se colarían prendas sin talla, que es justo lo que el
+     formulario de uno en uno no deja hacer. */
+  const missingRequired = (item: MultiItem): string[] => {
+    const values = multiFieldValues(item);
+    return getFieldsForCategory(item.category)
+      .filter(f => f.required)
+      .filter(f => !(values[f.name.toLowerCase()] || '').trim())
+      .map(f => f.name);
+  };
+
+  const multiReady = multiItems.filter(
+    i => i.include && i.name.trim() && i.category && missingRequired(i).length === 0
+  );
 
   const saveMulti = async () => {
     if (multiReady.length === 0) { setToast('Nada que guardar: revisa nombre y categoría'); return; }
@@ -275,6 +321,10 @@ export default function AdminPanel({
       category: i.category,
       categoryEmoji: i.categoryEmoji,
       categoryColor: i.categoryColor,
+      size: i.size.trim() || undefined,
+      color: i.color.trim() || undefined,
+      author: i.author.trim() || undefined,
+      description: i.description.trim() || undefined,
     })));
     setMultiSaving(false);
     if (!result.ok) { setToast(result.error || 'No se pudieron guardar'); return; }
@@ -815,6 +865,19 @@ export default function AdminPanel({
                             <option value="">Categoría *</option>
                             {categories.map(c => <option key={c} value={c}>{c}</option>)}
                           </select>
+
+                          {/* Campos propios de la categoría: talla, color, autor… */}
+                          {item.category && renderCategoryFields(
+                            item.category,
+                            multiFieldValues(item),
+                            (fieldName, value) => setMultiField(item.key, fieldName, value)
+                          )}
+
+                          {item.include && item.name.trim() && missingRequired(item).length > 0 && (
+                            <p className="text-xs px-2 py-1.5 rounded-lg" style={{ background: '#fef3c7', color: '#92400e' }}>
+                              Falta rellenar: {missingRequired(item).join(', ')}
+                            </p>
+                          )}
                         </>
                       )}
                     </div>
